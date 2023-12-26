@@ -1,5 +1,6 @@
 #pragma once
 
+#include "computeShader.hpp"
 #include "shaders.hpp"
 
 #include <glad/gl.h>
@@ -10,6 +11,7 @@ class Application{
     private:
         GLFWwindow* _Window = nullptr;
         ShadersPointer _Shaders = nullptr;
+        ComputeShader* _ComputeShader = nullptr;
 
     private:
         void update(float dt);

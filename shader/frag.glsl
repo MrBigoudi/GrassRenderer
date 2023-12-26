@@ -1,15 +1,12 @@
-#version 330 core
-
-in vec4 fCol;
-in vec3 fNorm;
-in vec3 fPos;
-in vec2 fUvs;
-
-out vec4 color;
-
-/**
- * The Phong model
-*/
-void main(){
-    color = fCol;
+#version 430 core
+out vec4 FragColor;
+	
+in vec2 TexCoords;
+	
+uniform sampler2D tex;
+	
+void main()
+{             
+    vec3 texCol = texture(tex, TexCoords).rgb;      
+    FragColor = vec4(texCol, 1.0);
 }

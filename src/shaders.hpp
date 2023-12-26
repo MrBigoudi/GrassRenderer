@@ -66,8 +66,11 @@ class Shaders{
             use();
             checkID("Can't set a uniform value before creating the program!\n");
             glUniform1i(glGetUniformLocation(_Id, name.c_str()), (GLuint)val);
-            fprintf(stderr, "Failed to set %s!\n", name.c_str());
-            ErrorHandler::handle(ErrorCodes::GL_ERROR);
+            auto error = glGetError();
+            if (error != GL_NO_ERROR) {
+                fprintf(stderr, "Failed to set %s! OpenGL error: %d\n", name.c_str(), error);
+                ErrorHandler::handle(ErrorCodes::GL_ERROR);
+            }
         }
 
         /**
@@ -78,9 +81,12 @@ class Shaders{
         void setInt(const std::string& name, int val) const {
             use();
             checkID("Can't set a uniform value before creating the program!\n");
-            glUniform1i(glGetUniformLocation(_Id, name.c_str()), (GLuint)val);
-            fprintf(stderr, "Failed to set %s!\n", name.c_str());
-            ErrorHandler::handle(ErrorCodes::GL_ERROR);
+            glUniform1i(glGetUniformLocation(_Id, name.c_str()), val);
+            auto error = glGetError();
+            if (error != GL_NO_ERROR) {
+                fprintf(stderr, "Failed to set %s! OpenGL error: %d\n", name.c_str(), error);
+                ErrorHandler::handle(ErrorCodes::GL_ERROR);
+            }
         }
 
         /**
@@ -91,9 +97,12 @@ class Shaders{
         void setFloat(const std::string& name, float val) const {
             use();
             checkID("Can't set a uniform value before creating the program!\n");
-            glUniform1f(glGetUniformLocation(_Id, name.c_str()), (GLuint)val);
-            fprintf(stderr, "Failed to set %s!\n", name.c_str());
-            ErrorHandler::handle(ErrorCodes::GL_ERROR);
+            glUniform1f(glGetUniformLocation(_Id, name.c_str()), val);
+            auto error = glGetError();
+            if (error != GL_NO_ERROR) {
+                fprintf(stderr, "Failed to set %s! OpenGL error: %d\n", name.c_str(), error);
+                ErrorHandler::handle(ErrorCodes::GL_ERROR);
+            }
         }
 
         /**
@@ -105,8 +114,11 @@ class Shaders{
             use();
             checkID("Can't set a uniform value before creating the program!\n");
             glUniformMatrix4fv(glGetUniformLocation(_Id, name.c_str()), 1, GL_FALSE, glm::value_ptr(val));
-            fprintf(stderr, "Failed to set %s!\n", name.c_str());
-            ErrorHandler::handle(ErrorCodes::GL_ERROR);
+            auto error = glGetError();
+            if (error != GL_NO_ERROR) {
+                fprintf(stderr, "Failed to set %s! OpenGL error: %d\n", name.c_str(), error);
+                ErrorHandler::handle(ErrorCodes::GL_ERROR);
+            }
         }
 
         /**
@@ -118,8 +130,11 @@ class Shaders{
             use();
             checkID("Can't set a uniform value before creating the program!\n");
             glUniform3fv(glGetUniformLocation(_Id, name.c_str()), 1, glm::value_ptr(val));
-            fprintf(stderr, "Failed to set %s!\n", name.c_str());
-            ErrorHandler::handle(ErrorCodes::GL_ERROR);
+            auto error = glGetError();
+            if (error != GL_NO_ERROR) {
+                fprintf(stderr, "Failed to set %s! OpenGL error: %d\n", name.c_str(), error);
+                ErrorHandler::handle(ErrorCodes::GL_ERROR);
+            }
         }
 
         /**
@@ -131,8 +146,11 @@ class Shaders{
             use();
             checkID("Can't set a uniform value before creating the program!\n");
             glUniform4fv(glGetUniformLocation(_Id, name.c_str()), 1, glm::value_ptr(val));
-            fprintf(stderr, "Failed to set %s!\n", name.c_str());
-            ErrorHandler::handle(ErrorCodes::GL_ERROR);
+            auto error = glGetError();
+            if (error != GL_NO_ERROR) {
+                fprintf(stderr, "Failed to set %s! OpenGL error: %d\n", name.c_str(), error);
+                ErrorHandler::handle(ErrorCodes::GL_ERROR);
+            }
         }
 
     private:
