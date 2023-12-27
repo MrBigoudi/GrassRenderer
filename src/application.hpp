@@ -1,7 +1,8 @@
 #pragma once
 
-#include "computeShader.hpp"
+#include "camera.hpp"
 #include "shaders.hpp"
+#include "grass.hpp"
 
 #include <glad/gl.h>
 #include <GL/gl.h>
@@ -10,16 +11,30 @@
 class Application{
     private:
         GLFWwindow* _Window = nullptr;
+        GLuint _Width = 800;
+        GLuint _Height = 600;
         ShadersPointer _Shaders = nullptr;
-        ComputeShader* _ComputeShader = nullptr;
+
+        Camera* _Camera;
+        Grass* _Grass;
+
+        float _CurrentFrameTime = 0.0f;
+        float _LastFrameTime = 0.0f;
+        float _DeltaTime = 0.0f;
 
     private:
-        void update(float dt);
+        void update();
         void render();
         void initGLFW();
         void initGLAD();
         void initShaders();
         void handleInput();
+
+        void updateDt(){
+            _CurrentFrameTime = static_cast<float>(glfwGetTime());
+            _DeltaTime = _CurrentFrameTime - _LastFrameTime;
+            _LastFrameTime = _CurrentFrameTime;
+        }
 
     public:
         Application(){}

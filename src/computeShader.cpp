@@ -34,6 +34,7 @@ const std::string ComputeShader::openShaderFile(const std::string& path) const{
         fprintf(stderr, "Failed to read the file: %s!\n", path.c_str());
         ErrorHandler::handle(IO_ERROR);
     }
+    // std::cout << shaderCode << std::endl;
     return shaderCode;
 }
 

@@ -1,12 +1,9 @@
-#version 430 core
-out vec4 FragColor;
-	
-in vec2 TexCoords;
-	
-uniform sampler2D tex;
+#version 450 core
+
+out vec4 oFragCol;
+in vec4 geomFragCol;
 	
 void main()
 {             
-    vec3 texCol = texture(tex, TexCoords).rgb;      
-    FragColor = vec4(texCol, 1.0);
+    oFragCol = geomFragCol;
 }

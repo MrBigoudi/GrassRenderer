@@ -13,8 +13,9 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 
 find_package(glfw3 REQUIRED)
 find_package(OpenGL REQUIRED)
+find_package(GLUT REQUIRED)
 
 add_subdirectory(src)
 add_subdirectory(dep)
 
-target_link_libraries(${PROJECT_NAME} PRIVATE glfw)
+target_link_libraries(${PROJECT_NAME} PRIVATE glfw ${OPENGL_LIBRARIES} ${GLUT_LIBRARIES})
