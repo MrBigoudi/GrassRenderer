@@ -23,7 +23,10 @@ class Camera{
         // camera Attributes
         glm::vec3 _Eye;
         glm::vec3 _At;
+        glm::vec3 _WorldUp;
+
         glm::vec3 _Up;
+        glm::vec3 _Right;
 
         float _Fov = 0.f;
         float _AspectRatio = 0.f;
@@ -31,22 +34,13 @@ class Camera{
         float _Far = 0.f;
 
         float _MovementSpeed = 0.5f;
+        float _MouseSensitivity = 0.1f;
+
+        float _Yaw = -90.f;
+        float _Pitch = 0.f;
     
     public:
         bool _Accelerate = false;
-
-    private:
-        void updateEye(const glm::vec3& newPos){
-            _Eye = newPos;
-        }
-
-        void updateAt(const glm::vec3& newLookAt){
-            _At = newLookAt;
-        }
-
-        void updateUp(const glm::vec3& newWorldUp){
-            _Up = newWorldUp;
-        }
 
     public:
         // constructor with vectors
@@ -56,20 +50,19 @@ class Camera{
             float near = 0.1f,
             float far = 100.f,
             const glm::vec3& position = glm::vec3(0.f, 1.f, 3.0f),
-            const glm::vec3& lookAt = glm::vec3(),
             const glm::vec3& worldUp = glm::vec3(0.f, 1.f, 0.f)
         ){
             _AspectRatio = aspectRatio;
             _Fov = fov;
             _Near = near;
             _Far = far;
-            updateEye(position);
-            updateAt(lookAt);
-            updateUp(worldUp);
+            _WorldUp = worldUp;
+            _Eye = position;
+            updateCameraVectors();
         }
 
         glm::mat4 getView(){
-            return glm::lookAt(_Eye, _At, _Up);
+            return glm::lookAt(_Eye, _Eye + _At, _Up);
         }
 
         glm::mat4 getPerspective(){
@@ -83,29 +76,61 @@ class Camera{
 
             switch(direction){
                 case FORWARD:
-                    updateEye(_Eye - glm::vec3(0.f, 0.f, velocity));
-                    updateAt(_At - glm::vec3(0.f, 0.f, velocity));
+                    _Eye += _At * velocity;
+                    // _At  -= glm::vec3(0.f, 0.f, velocity);
                     break;
                 case BACKWARD:
-                    updateEye(_Eye + glm::vec3(0.f, 0.f, velocity));
-                    updateAt(_At + glm::vec3(0.f, 0.f, velocity));
+                    _Eye -= _At * velocity;
+                    // _At  += glm::vec3(0.f, 0.f, velocity);
                     break;
                 case LEFT:
-                    updateEye(_Eye - glm::vec3(velocity, 0.f, 0.f));
-                    updateAt(_At - glm::vec3(velocity, 0.f, 0.f));
+                    _Eye -= _Right * velocity;
+                    // _At  -= _Right * velocity;
                     break;
                 case RIGHT:
-                    updateEye(_Eye + glm::vec3(velocity, 0.f, 0.f));
-                    updateAt(_At + glm::vec3(velocity, 0.f, 0.f));
+                    _Eye += _Right * velocity;
+                    // _At  += _Right * velocity;
                     break;
                 case UP:
-                    updateEye(_Eye + glm::vec3(0.f, velocity, 0.f));
-                    updateAt(_At + glm::vec3(0.f, velocity, 0.f));
+                    _Eye += _Up * velocity;
+                    // _At += _Up * velocity;
                     break;
                 case DOWN:
-                    updateEye(_Eye - glm::vec3(0.f, velocity, 0.f));
-                    updateAt(_At - glm::vec3(0.f, velocity, 0.f));
+                    _Eye -= _Up * velocity;
+                    // _At  -= _Up * velocity;
                     break;
             }
+        }
+
+        void ProcessMouseMovement(float xoffset, float yoffset, GLboolean constrainPitch = true){
+            xoffset *= _MouseSensitivity;
+            yoffset *= _MouseSensitivity;
+
+            _Yaw   += xoffset;
+            _Pitch += yoffset;
+
+            // make sure that when pitch is out of bounds, screen doesn't get flipped
+            if (constrainPitch){
+                if (_Pitch > 89.0f)
+                    _Pitch = 89.0f;
+                if (_Pitch < -89.0f)
+                    _Pitch = -89.0f;
+            }
+
+            // update Front, Right and Up Vectors using the updated Euler angles
+            updateCameraVectors();
+        }
+
+    private:
+        void updateCameraVectors(){
+            // calculate the new at vector
+            glm::vec3 front;
+            front.x = cos(glm::radians(_Yaw)) * cos(glm::radians(_Pitch));
+            front.y = sin(glm::radians(_Pitch));
+            front.z = sin(glm::radians(_Yaw)) * cos(glm::radians(_Pitch));
+            _At = glm::normalize(front);
+            // also re-calculate the Right and Up vector
+            _Right = glm::normalize(glm::cross(_At, _WorldUp));
+            _Up    = glm::normalize(glm::cross(_Right, _At));
         }
 };

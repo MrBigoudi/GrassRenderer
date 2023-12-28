@@ -37,6 +37,10 @@ void Application::initGLFW() {
         exit(EXIT_FAILURE);
     }
     glfwMakeContextCurrent(_Window);
+
+    glfwSetInputMode(_Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    glfwSetCursorPosCallback(_Window, mouseCallback);
+    glfwSetWindowUserPointer(_Window, this);
 }
 
 void Application::update(){

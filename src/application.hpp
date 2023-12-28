@@ -24,6 +24,10 @@ class Application{
         float _LastFrameTime = 0.0f;
         float _DeltaTime = 0.0f;
 
+        bool _FirstMouse = true;
+        double _LastMouseX;
+        double _LastMouseY;
+
     private:
         void update();
         void render();
@@ -45,4 +49,22 @@ class Application{
         void init();
         void run();
         void quit();
+
+        static void mouseCallback(GLFWwindow* window, double xpos, double ypos) {
+            Application* app = static_cast<Application*>(glfwGetWindowUserPointer(window));
+
+            if (app->_FirstMouse) {
+                app->_LastMouseX = xpos;
+                app->_LastMouseY = ypos;
+                app->_FirstMouse = false;
+            }
+
+            double xoffset = xpos - app->_LastMouseX;
+            double yoffset = app->_LastMouseY - ypos; // reversed since y-coordinates range from bottom to top
+
+            app->_LastMouseX = xpos;
+            app->_LastMouseY = ypos;
+
+            app->_Camera->ProcessMouseMovement(static_cast<float>(xoffset), static_cast<float>(yoffset));
+        }
 };
