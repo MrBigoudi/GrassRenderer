@@ -48,10 +48,9 @@ class ComputeShader{
 
         void use() const {
             glUseProgram(_Id);
-            GLint currentProgram;
-            glGetIntegerv(GL_CURRENT_PROGRAM, &currentProgram);
-            if (currentProgram != static_cast<GLint>(_Id)) {
-                fprintf(stderr, "Failed to use the program!\n");
+            auto error = glGetError();
+            if (error != GL_NO_ERROR) {
+                fprintf(stderr, "Failed to use the compute shader!\n\tOpenGL error: %s\n", gluErrorString(error));
                 ErrorHandler::handle(ErrorCodes::GL_ERROR);
             }
         }

@@ -27,7 +27,6 @@ class Axis{
                 0.0f, 0.0f, 1.0f  // z
             };
 
-            _Shaders->use();
             GLuint vbo;
             glCreateVertexArrays(1, &_Vao);
             glCreateBuffers(1, &vbo);
@@ -39,6 +38,12 @@ class Axis{
             glVertexArrayAttribBinding(_Vao, 0, 0);
 
             glVertexArrayVertexBuffer(_Vao, 0, vbo, 0, 3*sizeof(float));
+        
+            auto error = glGetError();
+            if (error != GL_NO_ERROR) {
+                fprintf(stderr, "Failed to initialize the axis!\n\tOpenGL error: %s\n", gluErrorString(error));
+                ErrorHandler::handle(ErrorCodes::GL_ERROR);
+            }
         }
 
         void setMatrices(const glm::mat4& view, const glm::mat4& proj){

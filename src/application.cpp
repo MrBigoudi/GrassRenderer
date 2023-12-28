@@ -87,8 +87,8 @@ void Application::init(){
     initGLAD();
     initShaders();
     _Camera = new Camera((float)_Width / (float)_Height);
-    _Grass = new Grass();
     _Axis = new Axis();
+    _Grass = new Grass();
 }
 
 void Application::run(){
@@ -100,7 +100,7 @@ void Application::run(){
         // test camera
         _Shaders->use();
         glm::mat4 projection = _Camera->getPerspective();
-        _Shaders->setMat4f("projection", projection);
+        _Shaders->setMat4f("proj", projection);
         glm::mat4 view = _Camera->getView();
         _Shaders->setMat4f("view", view);
 

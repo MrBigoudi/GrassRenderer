@@ -20,19 +20,16 @@ layout(binding = 3, std430) buffer WidthsBuffer {
 
 uniform int tileWidth;
 uniform int tileHeight;
-uniform int tileLength;
+uniform float tileLength;
 
 
 vec3 getPosition(uint id){
     vec3 newPos = vec3(0.f);
-    uint tileX = id;
-    // uint tileX = id % tileWidth;
-    uint tileY = 0;
-    // uint tileY = id / tileHeight;
+    uint tileX = id % tileWidth;
+    uint tileZ = id / tileHeight;
 
-    newPos.x = tileX * tileLength; // center to the tile for now
-    newPos.y = tileY * tileLength; // center to the tile for now
-    newPos.z = 0.f;
+    newPos.x = (tileX + 0.5f) * tileLength; // center to the tile for now
+    newPos.z = (tileZ + 0.5f) * tileLength; // center to the tile for now
 
     return newPos;
 }

@@ -1,18 +1,33 @@
 #version 450 core
 	
-layout(location = 0) in vec3 iPosition;  // Grass blade position
-layout(location = 1) in vec2 iFacing;    // Grass blade facing direction
-layout(location = 2) in float iHeight;   // Grass blade height
-layout(location = 3) in float iWidth;    // Grass blade width
+layout(binding = 0, std430) readonly buffer positions{
+    vec3 iPosition[];  // Grass blade position
+};
 
-out vec3 geomPosition;
-out vec2 geomFacing;
-out float geomHeight;
-out float geomWidth;
+layout(binding = 1, std430) readonly buffer facings{
+    vec2 iFacing[];    // Grass blade facing direction
+};
+
+layout(binding = 2, std430) readonly buffer heights{
+    float iHeight[];   // Grass blade height
+};
+
+layout(binding = 3, std430) readonly buffer widths{
+    float iWidth[];    // Grass blade width
+};
+
+
+out VertexData{
+    vec3 _Position;
+    vec2 _Facing;
+    float _Height;
+    float _Width;
+} vertexData;
+
 
 void main() {
-    geomPosition = iPosition;
-    geomFacing = iFacing;
-    geomHeight = iHeight;
-    geomWidth = iWidth;
+    vertexData._Position = iPosition[gl_VertexID];
+    vertexData._Facing = iFacing[gl_VertexID];
+    vertexData._Height = iHeight[gl_VertexID];
+    vertexData._Width = iWidth[gl_VertexID];
 }

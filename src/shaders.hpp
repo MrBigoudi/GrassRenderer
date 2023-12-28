@@ -66,7 +66,7 @@ class Shaders{
         void setBool(const std::string& name, bool val) const {
             use();
             checkID("Can't set a uniform value before creating the program!\n");
-            glUniform1i(glGetUniformLocation(_Id, name.c_str()), (GLuint)val);
+            glUniform1i(getUniformLocation(name), (GLuint)val);
             checkError(name);
         }
 
@@ -78,7 +78,7 @@ class Shaders{
         void setInt(const std::string& name, int val) const {
             use();
             checkID("Can't set a uniform value before creating the program!\n");
-            glUniform1i(glGetUniformLocation(_Id, name.c_str()), val);
+            glUniform1i(getUniformLocation(name), val);
             checkError(name);
         }
 
@@ -90,7 +90,7 @@ class Shaders{
         void setFloat(const std::string& name, float val) const {
             use();
             checkID("Can't set a uniform value before creating the program!\n");
-            glUniform1f(glGetUniformLocation(_Id, name.c_str()), val);
+            glUniform1f(getUniformLocation(name), val);
             checkError(name);
         }
 
@@ -102,7 +102,7 @@ class Shaders{
         void setMat4f(const std::string& name, const glm::mat4x4& val) const {
             use();
             checkID("Can't set a uniform value before creating the program!\n");
-            glUniformMatrix4fv(glGetUniformLocation(_Id, name.c_str()), 1, GL_FALSE, glm::value_ptr(val));
+            glUniformMatrix4fv(getUniformLocation(name), 1, GL_FALSE, glm::value_ptr(val));
             checkError(name);
         }
 
@@ -114,7 +114,7 @@ class Shaders{
         void setVec3f(const std::string& name, const glm::vec3& val) const {
             use();
             checkID("Can't set a uniform value before creating the program!\n");
-            glUniform3fv(glGetUniformLocation(_Id, name.c_str()), 1, glm::value_ptr(val));
+            glUniform3fv(getUniformLocation(name), 1, glm::value_ptr(val));
             checkError(name);
         }
 
@@ -126,7 +126,7 @@ class Shaders{
         void setVec4f(const std::string& name, const glm::vec4& val) const {
             use();
             checkID("Can't set a uniform value before creating the program!\n");
-            glUniform4fv(glGetUniformLocation(_Id, name.c_str()), 1, glm::value_ptr(val));
+            glUniform4fv(getUniformLocation(name), 1, glm::value_ptr(val));
             checkError(name);
         }
 
@@ -180,6 +180,15 @@ class Shaders{
                 fprintf(stderr, "Failed to set %s!\n\tOpenGL error: %s\n", name.c_str(), gluErrorString(error));
                 ErrorHandler::handle(ErrorCodes::GL_ERROR);
             }
+        }
+
+        GLint getUniformLocation(const std::string& name) const {
+            GLint uniformLocation = glGetUniformLocation(_Id, name.c_str());
+            if (uniformLocation == -1) {
+                fprintf(stderr, "Failed to set %s!\n\terror: Uniform not found!\n", name.c_str());
+                ErrorHandler::handle(ErrorCodes::GL_ERROR);
+            }
+            return uniformLocation;
         }
 
 };

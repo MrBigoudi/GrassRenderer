@@ -25,6 +25,11 @@ Shaders::Shaders(const std::string& vert, const std::string& frag, const std::st
 void Shaders::use() const {
     checkID("Can't use the shader before creating the program!\n");
     glUseProgram(_Id);
+    auto error = glGetError();
+    if (error != GL_NO_ERROR) {
+        fprintf(stderr, "Failed to use the shader!\n\tOpenGL error: %s\n", gluErrorString(error));
+        ErrorHandler::handle(ErrorCodes::GL_ERROR);
+    }
 }
 
 
