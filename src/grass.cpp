@@ -56,8 +56,8 @@ void Grass::dispatchComputeShader(){
     _ComputeShader->use();
 
     // _ComputeShader->setInt("nbGrassBlades", _NbGrassBlades);
-    _ComputeShader->setInt("tileWidth", _TileWidth);
-    _ComputeShader->setInt("tileHeight", _TileHeight);
+    // _ComputeShader->setInt("tileWidth", _TileWidth);
+    // _ComputeShader->setInt("tileHeight", _TileHeight);
     _ComputeShader->setInt("tileLength", _TileLength);
 
     // Dispatch the compute shader

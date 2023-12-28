@@ -25,11 +25,14 @@ uniform int tileLength;
 
 vec3 getPosition(uint id){
     vec3 newPos = vec3(0.f);
-    uint tileX = id % tileWidth;
-    uint tileY = id / tileHeight;
+    uint tileX = id;
+    // uint tileX = id % tileWidth;
+    uint tileY = 0;
+    // uint tileY = id / tileHeight;
 
-    newPos.x = (tileX + 0.5f) * tileLength; // center to the tile for now
-    newPos.y = (tileY + 0.5f) * tileLength; // center to the tile for now
+    newPos.x = tileX * tileLength; // center to the tile for now
+    newPos.y = tileY * tileLength; // center to the tile for now
+    newPos.z = 0.f;
 
     return newPos;
 }

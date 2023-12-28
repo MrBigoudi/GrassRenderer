@@ -1,8 +1,10 @@
 #include "application.hpp"
+#include "camera.hpp"
 #include "errorHandler.hpp"
 #include "grass.hpp"
 #include "shaders.hpp"
 
+#include <GLFW/glfw3.h>
 #include <cstdlib>
 #include <iostream>
 
@@ -27,7 +29,7 @@ void Application::initGLFW() {
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     //glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
     glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
-
+    
     _Window = glfwCreateWindow(_Width, _Height, "grass renderer", NULL, NULL);
     if(!_Window){
         fprintf(stderr, "Failed to init GLFW window!\n");
@@ -42,32 +44,51 @@ void Application::update(){
 }
 
 void Application::render(){
-    glClearColor(0.f, 0.f, 0.f, 1.0f);
+    glClearColor(0.383f, 0.632f, 0.800f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     _Grass->render(_Shaders.get());
+    _Axis->render();
+}
+
+void Application::handleCameraInput(){
+    // move camera
+    if (glfwGetKey(_Window, GLFW_KEY_W) == GLFW_PRESS)
+        _Camera->processKeyboard(FORWARD, _DeltaTime);
+    if (glfwGetKey(_Window, GLFW_KEY_S) == GLFW_PRESS)
+        _Camera->processKeyboard(BACKWARD, _DeltaTime);
+    if (glfwGetKey(_Window, GLFW_KEY_A) == GLFW_PRESS)
+        _Camera->processKeyboard(LEFT, _DeltaTime);
+    if (glfwGetKey(_Window, GLFW_KEY_D) == GLFW_PRESS)
+        _Camera->processKeyboard(RIGHT, _DeltaTime);
+    if (glfwGetKey(_Window, GLFW_KEY_UP) == GLFW_PRESS)
+        _Camera->processKeyboard(UP, _DeltaTime);
+    if (glfwGetKey(_Window, GLFW_KEY_DOWN) == GLFW_PRESS)
+        _Camera->processKeyboard(DOWN, _DeltaTime);
+
+    // accelerate camera
+    if (glfwGetKey(_Window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS){
+        _Camera->_Accelerate = true;
+    }
+    if (glfwGetKey(_Window, GLFW_KEY_LEFT_SHIFT) == GLFW_RELEASE){
+        _Camera->_Accelerate = false;
+    }
+
 }
 
 void Application::handleInput(){
     if(glfwGetKey(_Window, GLFW_KEY_ESCAPE) == GLFW_PRESS){
         glfwSetWindowShouldClose(_Window, true);
-    }
-
-    if (glfwGetKey(_Window, GLFW_KEY_W) == GLFW_PRESS)
-        _Camera->ProcessKeyboard(FORWARD, _DeltaTime);
-    if (glfwGetKey(_Window, GLFW_KEY_S) == GLFW_PRESS)
-        _Camera->ProcessKeyboard(BACKWARD, _DeltaTime);
-    if (glfwGetKey(_Window, GLFW_KEY_A) == GLFW_PRESS)
-        _Camera->ProcessKeyboard(LEFT, _DeltaTime);
-    if (glfwGetKey(_Window, GLFW_KEY_D) == GLFW_PRESS)
-        _Camera->ProcessKeyboard(RIGHT, _DeltaTime);
+    }   
+    handleCameraInput();
 }
 
 void Application::init(){
     initGLFW();
     initGLAD();
     initShaders();
-    _Camera = new Camera();
+    _Camera = new Camera((float)_Width / (float)_Height);
     _Grass = new Grass();
+    _Axis = new Axis();
 }
 
 void Application::run(){
@@ -78,15 +99,12 @@ void Application::run(){
 
         // test camera
         _Shaders->use();
-        glm::mat4 projection = 
-            glm::perspective(
-                glm::radians(_Camera->Zoom), 
-                (float)_Width / (float)_Height, 
-                0.1f, 100.0f
-        );
+        glm::mat4 projection = _Camera->getPerspective();
         _Shaders->setMat4f("projection", projection);
-        glm::mat4 view = _Camera->GetViewMatrix();
+        glm::mat4 view = _Camera->getView();
         _Shaders->setMat4f("view", view);
+
+        _Axis->setMatrices(view, projection);
         // end of test
 
         // test compute shader

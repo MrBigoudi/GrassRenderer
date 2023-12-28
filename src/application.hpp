@@ -1,5 +1,6 @@
 #pragma once
 
+#include "axis.hpp"
 #include "camera.hpp"
 #include "shaders.hpp"
 #include "grass.hpp"
@@ -15,8 +16,9 @@ class Application{
         GLuint _Height = 600;
         ShadersPointer _Shaders = nullptr;
 
-        Camera* _Camera;
-        Grass* _Grass;
+        Camera* _Camera = nullptr;
+        Grass* _Grass = nullptr;
+        Axis* _Axis = nullptr;
 
         float _CurrentFrameTime = 0.0f;
         float _LastFrameTime = 0.0f;
@@ -29,6 +31,7 @@ class Application{
         void initGLAD();
         void initShaders();
         void handleInput();
+        void handleCameraInput();
 
         void updateDt(){
             _CurrentFrameTime = static_cast<float>(glfwGetTime());
