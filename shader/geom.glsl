@@ -15,7 +15,7 @@ in VertexData {
 
 out vec4 geomFragCol;
 
-const vec4 green = vec4(0.f, 1.f, 0.f, 1.f);
+const vec4 green = vec4(0.f, 0.5f, 0.f, 1.f);
 
 void main(){
     vec3 pos = vertexData[0]._Position;

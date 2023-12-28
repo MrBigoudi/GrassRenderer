@@ -23,7 +23,7 @@ class Grass{
         GLuint _NbGrassBlades = 1024;
         GLuint _TileWidth = 32;
         GLuint _TileHeight = 32;
-        GLfloat _TileLength = 0.1f;
+        GLfloat _TileLength = 0.5f;
 
         // buffers compute shader
         GLuint _PositionBuffer;

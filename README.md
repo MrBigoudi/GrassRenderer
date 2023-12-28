@@ -12,14 +12,15 @@ Glad
 
 ## Step 1 - Compute shader
 
-In this [shader](shader/grassCompute.glsl) we create each blade of grass (position, height, width, etc, ...)
+In this [compute shader](shader/grassCompute.glsl) we create each blade of grass (position, height, width, etc, ...)
 
-For example, we can see that we have created 1024 blades of grass that are all represented by a point of random color for now (TODO: add image).
+We start by generating 1024 blades of grass that are all represented by a point.
 
 ## Step 2 - Geometry shader
 
-From the output of the compute shader, we want to create triangles that will look like grass (TODO: add image).
+From the output of the compute shader, we want to create triangles that will look like grass. To do so, we send the buffers filled in the compute shader to the graphics pipeline shaders. In the vertex shader we use the vertexID to create a vertexData from the buffers. Each of the data represent a grass blade but for now it is only a position. To make the blades visible, we use a [geometryShader](shader/geom.glsl) which will generate triangles from the vertexData. For now, all the triangles have the same LOD (a unique triangle) and all of them are located at the center of their respective tile.
+![First output of the geometry shader](report/trianglesOutsideGeometry.png)
 
 ## Step 3 - Grass pattern
 
-Now, instead of having regular grass pattern, we want to add some noise (TODO: add image).
+Now, instead of having regular grass pattern, we want to add some noise to the grass blades within their respective tile (TODO: add image).
