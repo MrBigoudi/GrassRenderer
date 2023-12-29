@@ -9,6 +9,7 @@ void Grass::initBuffers(){
     glCreateBuffers(1, &_FacingBuffer);
     glCreateBuffers(1, &_HeightBuffer);
     glCreateBuffers(1, &_WidthBuffer);
+    glCreateBuffers(1, &_ColorBuffer);
 
     // Set up buffers
     // positions
@@ -39,6 +40,13 @@ void Grass::initBuffers(){
     );
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, _WidthBuffer);
 
+    // colors
+    glNamedBufferStorage(_ColorBuffer, 
+        GRASS_COLOR_BUFFER_ELEMENT_SIZE * _NbGrassBlades,
+        nullptr, GL_DYNAMIC_STORAGE_BIT
+    );
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, _ColorBuffer);
+
     auto error = glGetError();
     if (error != GL_NO_ERROR) {
         fprintf(stderr, "Failed to initialize the grass buffers!\n\tOpenGL error: %s\n", gluErrorString(error));
@@ -68,10 +76,14 @@ void Grass::dispatchComputeShader(){
     // Bind the compute shader program
     _ComputeShader->use();
     glBindVertexArray(_VAO);
+
     // _ComputeShader->setInt("nbGrassBlades", _NbGrassBlades);
+    // _ComputeShader->setFloat("tileLength", _TileLength);
+
     _ComputeShader->setInt("tileWidth", _TileWidth);
     _ComputeShader->setInt("tileHeight", _TileHeight);
-    _ComputeShader->setFloat("tileLength", _TileLength);
+    _ComputeShader->setInt("gridNbCols", _GridNbCols);
+    _ComputeShader->setInt("gridNbLines", _GridNbLines);
 
     // Dispatch the compute shader
     glDispatchCompute(_NbGrassBlades, 1, 1);
@@ -91,20 +103,26 @@ void Grass::updateRenderingBuffers(){
     // facings
     glEnableVertexArrayAttrib(_VAO, 1);
     glVertexArrayAttribFormat(_VAO, 1, GRASS_FACING_NB_ELEMENT, GL_FLOAT, GL_FALSE, 0);
-    glVertexArrayAttribBinding(_VAO, 1,1);
+    glVertexArrayAttribBinding(_VAO, 1, 1);
     glVertexArrayVertexBuffer(_VAO, 1, _FacingBuffer, 0, GRASS_FACING_BUFFER_ELEMENT_SIZE);
 
     // heights
     glEnableVertexArrayAttrib(_VAO, 2);
     glVertexArrayAttribFormat(_VAO, 2, GRASS_HEIGHT_NB_ELEMENT, GL_FLOAT, GL_FALSE, 0);
-    glVertexArrayAttribBinding(_VAO, 2,2);
+    glVertexArrayAttribBinding(_VAO, 2, 2);
     glVertexArrayVertexBuffer(_VAO, 2, _HeightBuffer, 0, GRASS_HEIGHT_BUFFER_ELEMENT_SIZE);
 
     // widths
     glEnableVertexArrayAttrib(_VAO, 3);
     glVertexArrayAttribFormat(_VAO, 3, GRASS_WIDTH_NB_ELEMENT, GL_FLOAT, GL_FALSE, 0);
-    glVertexArrayAttribBinding(_VAO, 3,3);
+    glVertexArrayAttribBinding(_VAO, 3, 3);
     glVertexArrayVertexBuffer(_VAO, 3, _WidthBuffer, 0, GRASS_WIDTH_BUFFER_ELEMENT_SIZE);
+
+    // colors
+    glEnableVertexArrayAttrib(_VAO, 4);
+    glVertexArrayAttribFormat(_VAO, 4, GRASS_COLOR_NB_ELEMENT, GL_FLOAT, GL_FALSE, 0);
+    glVertexArrayAttribBinding(_VAO, 4, 4);
+    glVertexArrayVertexBuffer(_VAO, 4, _ColorBuffer, 0, GRASS_COLOR_BUFFER_ELEMENT_SIZE);
     
     error = glGetError();
     if (error != GL_NO_ERROR) {

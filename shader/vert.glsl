@@ -16,12 +16,17 @@ layout(binding = 3, std430) readonly buffer widths{
     float iWidth[];    // Grass blade width
 };
 
+layout(binding = 4, std430) readonly buffer colors{
+    vec3 iColor[];  // Grass blade color
+};
+
 
 out VertexData{
     vec3 _Position;
     vec2 _Facing;
     float _Height;
     float _Width;
+    vec3 _Color;
 } vertexData;
 
 
@@ -30,4 +35,5 @@ void main() {
     vertexData._Facing = iFacing[gl_VertexID];
     vertexData._Height = iHeight[gl_VertexID];
     vertexData._Width = iWidth[gl_VertexID];
+    vertexData._Color = iColor[gl_VertexID];
 }
