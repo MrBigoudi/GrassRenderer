@@ -20,6 +20,10 @@ layout(binding = 4, std430) readonly buffer colors{
     vec3 iColor[];  // Grass blade color
 };
 
+layout(binding = 4, std430) readonly buffer rotations{
+    float iRotation[];  // Grass blade rotation
+};
+
 
 out VertexData{
     vec3 _Position;
@@ -27,6 +31,7 @@ out VertexData{
     float _Height;
     float _Width;
     vec3 _Color;
+    float _Rotation;
 } vertexData;
 
 
@@ -36,4 +41,5 @@ void main() {
     vertexData._Height = iHeight[gl_VertexID];
     vertexData._Width = iWidth[gl_VertexID];
     vertexData._Color = iColor[gl_VertexID];
+    vertexData._Rotation = iRotation[gl_VertexID];
 }

@@ -12,9 +12,17 @@ in VertexData {
     float _Height;
     float _Width;
     vec3 _Color;
+    float _Rotation;
 } vertexData[];
 
 out vec4 geomFragCol;
+
+
+mat3 getRotationMatrix(float rotation){
+    return mat3(cos(rotation), 0.f, sin(rotation),
+                0.f, 1.f, 0.f,
+                -sin(rotation), 0.f, cos(rotation));
+}
 
 
 void main(){
@@ -23,6 +31,7 @@ void main(){
     float height = vertexData[0]._Height;
     float width = vertexData[0]._Width;
     vec4 color = vec4(vertexData[0]._Color, 1.f);
+    float rotation = vertexData[0]._Rotation;
 
 
     float halfWidth = width / 2.f;
@@ -32,6 +41,7 @@ void main(){
 
     // first vertex
     curPosition = pos - vec3(halfWidth, 0.f, 0.f);
+    curPosition = getRotationMatrix(rotation) * (curPosition - pos) + pos;
     worldPosition = proj * view * vec4(curPosition, 1.f);
     gl_Position = worldPosition;
     geomFragCol = color;
@@ -39,6 +49,7 @@ void main(){
 
     // second vertex
     curPosition = pos + vec3(halfWidth, 0.f, 0.f);
+    curPosition = getRotationMatrix(rotation) * (curPosition - pos) + pos;
     worldPosition = proj * view * vec4(curPosition, 1.f);
     gl_Position = worldPosition;
     geomFragCol = color;
@@ -46,6 +57,7 @@ void main(){
 
     // third vertex
     curPosition = pos + vec3(0.f, height, 0.f);
+    curPosition = getRotationMatrix(rotation) * (curPosition - pos) + pos;
     worldPosition = proj * view * vec4(curPosition, 1.f);
     gl_Position = worldPosition;
     geomFragCol = color;

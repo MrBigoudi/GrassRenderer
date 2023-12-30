@@ -93,6 +93,13 @@ void Application::init(){
     _Camera = new Camera((float)_Width / (float)_Height);
     _Axis = new Axis();
     _Grass = new Grass();
+
+    glEnable(GL_DEPTH_TEST);
+    GLenum error = glGetError();
+    if (error != GL_NO_ERROR) {
+        fprintf(stderr, "OpenGL error: %d\n", error);
+        ErrorHandler::handle(ErrorCodes::GL_ERROR);
+    }
 }
 
 void Application::run(){

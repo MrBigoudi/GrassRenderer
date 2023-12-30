@@ -32,3 +32,9 @@ Now, instead of having regular grass pattern, we want to add some noise to the g
 - We then find the 9 closest intersection in the grid (or less if it is at a corner, the top, the bottom, the left or the right of the grid)
 - We then find the closest voronoï vertex to the grass blade (using now the jittered position of the previous 9 intersections)
 - For every voronoï cells, we have defined custom information (blade's height, width, orientation, etc...) that we then use to create the vertex data of that blade that we will send to the vertex shader. In the following image, we have assigned a random color for each of the clumps (or voronoi areas) ![Clump colors](report/trianglesClumps.png)
+
+## Step 4 - Rotation
+
+We want now to add some rotation for each blade.
+
+- First, we add some random roation in the compute shader ![Random rotation](report/randomRotations.png);

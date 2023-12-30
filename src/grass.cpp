@@ -10,6 +10,7 @@ void Grass::initBuffers(){
     glCreateBuffers(1, &_HeightBuffer);
     glCreateBuffers(1, &_WidthBuffer);
     glCreateBuffers(1, &_ColorBuffer);
+    glCreateBuffers(1, &_RotationBuffer);
 
     // Set up buffers
     // positions
@@ -46,6 +47,13 @@ void Grass::initBuffers(){
         nullptr, GL_DYNAMIC_STORAGE_BIT
     );
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, _ColorBuffer);
+
+    // rotations
+    glNamedBufferStorage(_RotationBuffer, 
+        GRASS_ROTATION_BUFFER_ELEMENT_SIZE * _NbGrassBlades, 
+        nullptr, GL_DYNAMIC_STORAGE_BIT
+    );
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, _RotationBuffer);
 
     auto error = glGetError();
     if (error != GL_NO_ERROR) {
@@ -123,6 +131,12 @@ void Grass::updateRenderingBuffers(){
     glVertexArrayAttribFormat(_VAO, 4, GRASS_COLOR_NB_ELEMENT, GL_FLOAT, GL_FALSE, 0);
     glVertexArrayAttribBinding(_VAO, 4, 4);
     glVertexArrayVertexBuffer(_VAO, 4, _ColorBuffer, 0, GRASS_COLOR_BUFFER_ELEMENT_SIZE);
+
+    // rotations
+    glEnableVertexArrayAttrib(_VAO, 5);
+    glVertexArrayAttribFormat(_VAO, 5, GRASS_ROTATION_NB_ELEMENT, GL_FLOAT, GL_FALSE, 0);
+    glVertexArrayAttribBinding(_VAO, 5, 5);
+    glVertexArrayVertexBuffer(_VAO, 5, _RotationBuffer, 0, GRASS_ROTATION_BUFFER_ELEMENT_SIZE);
     
     error = glGetError();
     if (error != GL_NO_ERROR) {

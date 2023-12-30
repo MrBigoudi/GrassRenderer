@@ -24,6 +24,10 @@ layout(binding = 4, std430) buffer ColorsBuffer {
     vec3 colors[];
 };
 
+layout(binding = 5, std430) buffer RotationsBuffer {
+    float rotations[];
+};
+
 
 
 // Uniform variables
@@ -32,6 +36,7 @@ uniform int tileWidth;
 uniform int tileHeight;
 uniform int gridNbCols;
 uniform int gridNbLines;
+const float PI = 3.1416f;
 
 
 // Helper functions
@@ -198,9 +203,12 @@ void main() {
     widths[instanceIndex] = 0.1f;
 
     vec3 color = vec3(
-        rand(vec2(clumpId, 0)),
-        rand(vec2(0, clumpId)),
-        rand(vec2(clumpId, clumpId))
+        0.f,
+        rand(vec2(clumpId, clumpId)),
+        0.f
     );
     colors[instanceIndex] = color;
+
+    float rotation = radians(rand(vec2(instanceIndex, 0.f)) * 360.f);
+    rotations[instanceIndex] = rotation;
 }
