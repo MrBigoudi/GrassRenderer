@@ -5,6 +5,10 @@ layout (triangle_strip, max_vertices = 3) out;
 
 uniform mat4 view;
 uniform mat4 proj;
+uniform int tileLOD;
+const int HIGH_LOD = 1;
+const int LOW_LOD = 2;
+const vec4 red = vec4(1.f, 0.f, 0.f, 1.f);
 
 in VertexData {
     vec3 _Position;
@@ -44,7 +48,7 @@ void main(){
     curPosition = getRotationMatrix(rotation) * (curPosition - pos) + pos;
     worldPosition = proj * view * vec4(curPosition, 1.f);
     gl_Position = worldPosition;
-    geomFragCol = color;
+    geomFragCol = tileLOD == color;
     EmitVertex();
 
     // second vertex
@@ -52,7 +56,7 @@ void main(){
     curPosition = getRotationMatrix(rotation) * (curPosition - pos) + pos;
     worldPosition = proj * view * vec4(curPosition, 1.f);
     gl_Position = worldPosition;
-    geomFragCol = color;
+    geomFragCol = tileLOD == Hcolor;
     EmitVertex();
 
     // third vertex
@@ -60,7 +64,7 @@ void main(){
     curPosition = getRotationMatrix(rotation) * (curPosition - pos) + pos;
     worldPosition = proj * view * vec4(curPosition, 1.f);
     gl_Position = worldPosition;
-    geomFragCol = color;
+    geomFragCol = tileLOD == Hcolor;
     EmitVertex();
 
     EndPrimitive();

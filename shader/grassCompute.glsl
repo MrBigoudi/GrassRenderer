@@ -36,6 +36,8 @@ uniform int tileWidth;
 uniform int tileHeight;
 uniform int gridNbCols;
 uniform int gridNbLines;
+uniform vec2 tilePos;
+uniform int tileID;
 const float PI = 3.1416f;
 
 
@@ -43,7 +45,7 @@ const float PI = 3.1416f;
 
 // generate random value given a vec2 seed
 float rand(vec2 co){
-    return fract(sin(dot(co ,vec2(12.9898,78.233))) * 43758.5453);
+    return fract(sin(dot(co*(tileID+1) ,vec2(12.9898,78.233))) * 43758.5453);
 }
 
 // return the id of the grid cell given a position
@@ -173,7 +175,9 @@ vec3 getRandomPosition(uint id){
     newPos.x = randX * float(tileWidth);
     newPos.z = randZ * float(tileHeight);
 
-    return newPos;
+    vec3 curTilePos = vec3(tilePos.x, 0.f, tilePos.y);
+
+    return newPos + curTilePos;
 }
 
 // find the clump in which the grass blade is

@@ -118,10 +118,6 @@ void Application::run(){
         _Axis->setMatrices(view, projection);
         // end of test
 
-        // test compute shader
-        _Grass->dispatchComputeShader();
-        //
-
         render();
 
         glfwPollEvents();

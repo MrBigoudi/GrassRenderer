@@ -21,16 +21,25 @@ enum GrassSizes{
     GRASS_ROTATION_BUFFER_ELEMENT_SIZE = sizeof(float),
 };
 
-class Grass{
+enum GrassLOD{
+    GRASS_HIGH_LOD = 1,
+    GRASS_LOW_LOD = 2,
+};
+
+class GrassTile{
+
+    private:
+        static GLuint _IdCounter;
 
     private:
         GLuint _NbGrassBlades = 1024;
         // GLuint _NbGrassBlades = 2048;
-        GLuint _TileWidth = 16;
-        GLuint _TileHeight = 16;
         GLuint _GridNbCols = 16;
         GLuint _GridNbLines = 16;
         // GLfloat _TileLength = 0.5f;
+        GLuint _TileId = _IdCounter++;
+        glm::vec2 _TilePos;
+        GrassLOD _LOD; 
 
         // buffers compute shader
         GLuint _PositionBuffer;
@@ -50,8 +59,26 @@ class Grass{
         void updateRenderingBuffers();
 
     public:
-        Grass(const std::string& shaderPath = "shader/grassCompute.glsl");
+        GrassTile(const glm::vec2& tilePos, 
+                GrassLOD tileLOD = GRASS_LOW_LOD,
+                const std::string& shaderPath = "shader/grassCompute.glsl");
         
-        void dispatchComputeShader();
+        void dispatchComputeShader(GLuint tileWidth, GLuint tileHeight);
+        void render(Shaders* shaders);
+};
+
+
+class Grass{
+    private:
+        GLuint _NbTiles = 4;
+        GLuint _TileWidth = 16;
+        GLuint _TileHeight = 16;
+        GLuint _TileNbCols = 2;
+        GLuint _TileNbLines = 2;
+
+        std::vector<GrassTile*> _Tiles;
+
+    public:
+        Grass();
         void render(Shaders* shaders);
 };

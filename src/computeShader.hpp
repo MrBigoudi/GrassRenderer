@@ -111,6 +111,17 @@ class ComputeShader{
         }
 
         /**
+         * Set a uniform 2x1 float vector
+         * @param name The variable's name
+         * @param val The variable's value
+        */
+        void setVec2f(const std::string& name, const glm::vec2& val) const {
+            use();
+            glUniform2fv(getUniformLocation(name), 1, glm::value_ptr(val));
+            checkError(name);
+        }
+
+        /**
          * Set a uniform 4x1 float vector
          * @param name The variable's name
          * @param val The variable's value
