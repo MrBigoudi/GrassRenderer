@@ -45,3 +45,7 @@ We want now to add some rotation for each blade.
 To try different level of details, we will try to add new tiles.
 
 - The first idea is to use the same compute shader for each tile and use the tile IDs in the random generations so they don't all look the same. Here we have 4 tiles, and the first one is displayed in red ![Multiple tiles](report/multipleTile.png)
+
+- Then, we create two kind of LODs for the tiles. Some tiles have high lod and others have low. Grass blades of high lod are made of 15 vertices and the ones of low lod are made of 7 vertices ![Multiple LOD](report/lodBlades.png).
+
+- Finally, we update the LOD value of the tile with respect to it's distance to the camera's position.

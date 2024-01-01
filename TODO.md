@@ -1,7 +1,7 @@
 # Todo list
 
 - fix compute shader initialization (1 weird blade)
-- add tile LOD
+- update LOD in term of distances
 
 - add bezier curve to shape the grass
 - add round normals

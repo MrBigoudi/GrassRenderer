@@ -82,7 +82,8 @@ void Application::handleCameraInput(){
 void Application::handleInput(){
     if(glfwGetKey(_Window, GLFW_KEY_ESCAPE) == GLFW_PRESS){
         glfwSetWindowShouldClose(_Window, true);
-    }   
+    }
+    handleWireFrameInput();
     handleCameraInput();
 }
 

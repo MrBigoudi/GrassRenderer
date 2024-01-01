@@ -43,6 +43,20 @@ class Application{
             _LastFrameTime = _CurrentFrameTime;
         }
 
+        void setWireframeMode() const {
+            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        }
+
+        void unsetWireframeMode() const {
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        }
+
+        void handleWireFrameInput(){
+            if(glfwGetKey(_Window, GLFW_KEY_F) == GLFW_PRESS){
+                setWireframeMode();
+            }
+        }
+
     public:
         Application(){}
 
