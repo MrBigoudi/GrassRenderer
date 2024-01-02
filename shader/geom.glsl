@@ -35,14 +35,20 @@ mat3 getRotationMatrix(float rotation){
 }
 
 
-void getVerticesPositions(vec3 pos, float halfWidth, float height, out vec3 positions[NB_VERT_HIGH_LOD]){
+void getVerticesPositions(vec3 pos, float width, float height, out vec3 positions[NB_VERT_HIGH_LOD]){
     int nbVert = tileLOD == HIGH_LOD ? NB_VERT_HIGH_LOD : NB_VERT_LOW_LOD;
+
     float heightDelta = height / (nbVert / 2);
+    float minWidth = width / 5.f;
+    float widthDelta = minWidth / nbVert;
     float curHeight = 0.f;
+    float curWidth = width / 2;
+
     for(int i=0; i<nbVert-1; i+=2){
-        positions[i] = pos + vec3(-halfWidth, curHeight, 0.f);
-        positions[i+1] = pos + vec3(halfWidth, curHeight, 0.f);
+        positions[i] = pos + vec3(-curWidth, curHeight, 0.f);
+        positions[i+1] = pos + vec3(curWidth, curHeight, 0.f);
         curHeight += heightDelta;
+        curWidth -= widthDelta;
     }
 
     positions[nbVert-1] = pos + vec3(0.f, height, 0.f);
@@ -105,9 +111,8 @@ void main(){
     vec4 color = vec4(vertexData[0]._Color, 1.f);
     float rotation = vertexData[0]._Rotation;
 
-    float halfWidth = width / 2.f;
     // float halfWidth = 10.f;
     vec3 positions[NB_VERT_HIGH_LOD];
-    getVerticesPositions(pos, halfWidth, height, positions);
+    getVerticesPositions(pos, width, height, positions);
     createTriangles(pos, positions, rotation, color);
 }

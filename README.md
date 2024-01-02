@@ -33,12 +33,11 @@ Now, instead of having regular grass pattern, we want to add some noise to the g
 - We then find the closest voronoï vertex to the grass blade (using now the jittered position of the previous 9 intersections)
 - For every voronoï cells, we have defined custom information (blade's height, width, orientation, etc...) that we then use to create the vertex data of that blade that we will send to the vertex shader. In the following image, we have assigned a random color for each of the clumps (or voronoi areas) ![Clump colors](report/trianglesClumps.png). We can see in the previous image that the z-buffer was not used resulting in a weird order for the triangles so we also fixed that at that stage.
 
-## Step 4 - Rotation and bending
+## Step 4 - Rotation
 
 We want now to add some rotation for each blade.
 
 - First, we add some random roation in the compute shader ![Random rotation](report/randomRotations.png);
-- We then add bending using cubic bezier curves to control the bend;
 
 ## Step 5 - LODs
 
@@ -51,3 +50,7 @@ To try different level of details, we will try to add new tiles.
 - Finally, we update the LOD value of the tile with respect to it's distance to the camera's position:
 - When the tile is far from the camera ![Far lod](report/farLOD.png) 
 - When the tile is near the camera ![Near LOD](report/nearLOD.png)
+
+## Step 6 bending
+
+- We then add bending using cubic bezier curves to control the bend;

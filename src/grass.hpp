@@ -32,8 +32,8 @@ class GrassTile{
         static GLuint _IdCounter;
 
     private:
-        GLuint _NbGrassBlades = 1024;
-        // GLuint _NbGrassBlades = 2048;
+        // GLuint _NbGrassBlades = 1024;
+        GLuint _NbGrassBlades = 2048;
         GLuint _GridNbCols = 16;
         GLuint _GridNbLines = 16;
         // GLfloat _TileLength = 0.5f;

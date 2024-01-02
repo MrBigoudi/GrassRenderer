@@ -40,6 +40,11 @@ uniform vec2 tilePos;
 uniform int tileID;
 const float PI = 3.1416f;
 
+const float MAX_WIDTH = 0.1f;
+const float MIN_WIDTH = 0.02f;
+const float MAX_HEIGHT = 0.5f; 
+const float MIN_HEIGHT = 0.3f; 
+
 
 // Helper functions
 
@@ -203,8 +208,8 @@ void main() {
     uint clumpId = getClumpId(bladePosition);
 
     facings[instanceIndex] = vec2(0.f);
-    heights[instanceIndex] = 0.5f;
-    widths[instanceIndex] = 0.1f;
+    heights[instanceIndex] = rand(vec2(instanceIndex, 0.f)) * (MAX_HEIGHT - MIN_HEIGHT) + MIN_HEIGHT;
+    widths[instanceIndex] = rand(vec2(0.f, instanceIndex)) * (MAX_WIDTH - MIN_WIDTH) + MIN_WIDTH;
 
     vec3 color = vec3(
         0.f,
