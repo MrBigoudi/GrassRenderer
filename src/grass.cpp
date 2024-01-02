@@ -8,11 +8,12 @@ void GrassTile::initBuffers(){
     glCreateVertexArrays(1, &_VAO);
     // Generate buffer objects
     glCreateBuffers(1, &_PositionBuffer);
-    glCreateBuffers(1, &_FacingBuffer);
     glCreateBuffers(1, &_HeightBuffer);
     glCreateBuffers(1, &_WidthBuffer);
     glCreateBuffers(1, &_ColorBuffer);
     glCreateBuffers(1, &_RotationBuffer);
+    glCreateBuffers(1, &_TiltBuffer);
+    glCreateBuffers(1, &_BendBuffer);
 
     // Set up buffers
     // positions
@@ -22,40 +23,47 @@ void GrassTile::initBuffers(){
     );
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, _PositionBuffer);
 
-    // facings
-    glNamedBufferStorage(_FacingBuffer, 
-        GRASS_FACING_BUFFER_ELEMENT_SIZE * _NbGrassBlades, 
-        nullptr, GL_DYNAMIC_STORAGE_BIT
-    );
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, _FacingBuffer);
-
     // heights
     glNamedBufferStorage(_HeightBuffer, 
         GRASS_HEIGHT_BUFFER_ELEMENT_SIZE * _NbGrassBlades, 
         nullptr, GL_DYNAMIC_STORAGE_BIT
     );
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, _HeightBuffer);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, _HeightBuffer);
 
     // widths
     glNamedBufferStorage(_WidthBuffer, 
         GRASS_WIDTH_BUFFER_ELEMENT_SIZE * _NbGrassBlades, 
         nullptr, GL_DYNAMIC_STORAGE_BIT
     );
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, _WidthBuffer);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, _WidthBuffer);
 
     // colors
     glNamedBufferStorage(_ColorBuffer, 
         GRASS_COLOR_BUFFER_ELEMENT_SIZE * _NbGrassBlades,
         nullptr, GL_DYNAMIC_STORAGE_BIT
     );
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, _ColorBuffer);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, _ColorBuffer);
 
     // rotations
     glNamedBufferStorage(_RotationBuffer, 
         GRASS_ROTATION_BUFFER_ELEMENT_SIZE * _NbGrassBlades, 
         nullptr, GL_DYNAMIC_STORAGE_BIT
     );
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, _RotationBuffer);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, _RotationBuffer);
+
+    // tilt
+    glNamedBufferStorage(_TiltBuffer, 
+        GRASS_TILT_BUFFER_ELEMENT_SIZE * _NbGrassBlades, 
+        nullptr, GL_DYNAMIC_STORAGE_BIT
+    );
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, _TiltBuffer);
+
+    // bend
+    glNamedBufferStorage(_BendBuffer, 
+        GRASS_BEND_BUFFER_ELEMENT_SIZE * _NbGrassBlades, 
+        nullptr, GL_DYNAMIC_STORAGE_BIT
+    );
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, _BendBuffer);
 
     auto error = glGetError();
     if (error != GL_NO_ERROR) {
@@ -92,14 +100,14 @@ void GrassTile::dispatchComputeShader(GLuint tileWidth, GLuint tileHeight){
     _ComputeShader->use();
     glBindVertexArray(_VAO);
 
-    // _ComputeShader->setInt("nbGrassBlades", _NbGrassBlades);
+    _ComputeShader->setInt("nbGrassBlades", _NbGrassBlades);
     // _ComputeShader->setFloat("tileLength", _TileLength);
-
     _ComputeShader->setInt("tileWidth", tileWidth);
     _ComputeShader->setInt("tileHeight", tileHeight);
     _ComputeShader->setInt("gridNbCols", _GridNbCols);
     _ComputeShader->setInt("gridNbLines", _GridNbLines);
     _ComputeShader->setVec2f("tilePos", _TilePos);
+    _ComputeShader->setInt("tileID", (int)_TileId);
 
     // Dispatch the compute shader
     glDispatchCompute(_NbGrassBlades, 1, 1);
@@ -116,35 +124,41 @@ void GrassTile::updateRenderingBuffers(){
     glVertexArrayAttribBinding(_VAO, 0, 0);
     glVertexArrayVertexBuffer(_VAO, 0, _PositionBuffer, 0, GRASS_POSITION_BUFFER_ELEMENT_SIZE);
 
-    // facings
-    glEnableVertexArrayAttrib(_VAO, 1);
-    glVertexArrayAttribFormat(_VAO, 1, GRASS_FACING_NB_ELEMENT, GL_FLOAT, GL_FALSE, 0);
-    glVertexArrayAttribBinding(_VAO, 1, 1);
-    glVertexArrayVertexBuffer(_VAO, 1, _FacingBuffer, 0, GRASS_FACING_BUFFER_ELEMENT_SIZE);
-
     // heights
-    glEnableVertexArrayAttrib(_VAO, 2);
-    glVertexArrayAttribFormat(_VAO, 2, GRASS_HEIGHT_NB_ELEMENT, GL_FLOAT, GL_FALSE, 0);
-    glVertexArrayAttribBinding(_VAO, 2, 2);
-    glVertexArrayVertexBuffer(_VAO, 2, _HeightBuffer, 0, GRASS_HEIGHT_BUFFER_ELEMENT_SIZE);
+    glEnableVertexArrayAttrib(_VAO, 1);
+    glVertexArrayAttribFormat(_VAO, 1, GRASS_HEIGHT_NB_ELEMENT, GL_FLOAT, GL_FALSE, 0);
+    glVertexArrayAttribBinding(_VAO, 1, 1);
+    glVertexArrayVertexBuffer(_VAO, 1, _HeightBuffer, 0, GRASS_HEIGHT_BUFFER_ELEMENT_SIZE);
 
     // widths
-    glEnableVertexArrayAttrib(_VAO, 3);
-    glVertexArrayAttribFormat(_VAO, 3, GRASS_WIDTH_NB_ELEMENT, GL_FLOAT, GL_FALSE, 0);
-    glVertexArrayAttribBinding(_VAO, 3, 3);
-    glVertexArrayVertexBuffer(_VAO, 3, _WidthBuffer, 0, GRASS_WIDTH_BUFFER_ELEMENT_SIZE);
+    glEnableVertexArrayAttrib(_VAO, 2);
+    glVertexArrayAttribFormat(_VAO, 2, GRASS_WIDTH_NB_ELEMENT, GL_FLOAT, GL_FALSE, 0);
+    glVertexArrayAttribBinding(_VAO, 2, 2);
+    glVertexArrayVertexBuffer(_VAO, 2, _WidthBuffer, 0, GRASS_WIDTH_BUFFER_ELEMENT_SIZE);
 
     // colors
-    glEnableVertexArrayAttrib(_VAO, 4);
-    glVertexArrayAttribFormat(_VAO, 4, GRASS_COLOR_NB_ELEMENT, GL_FLOAT, GL_FALSE, 0);
-    glVertexArrayAttribBinding(_VAO, 4, 4);
-    glVertexArrayVertexBuffer(_VAO, 4, _ColorBuffer, 0, GRASS_COLOR_BUFFER_ELEMENT_SIZE);
+    glEnableVertexArrayAttrib(_VAO, 3);
+    glVertexArrayAttribFormat(_VAO, 3, GRASS_COLOR_NB_ELEMENT, GL_FLOAT, GL_FALSE, 0);
+    glVertexArrayAttribBinding(_VAO, 3, 3);
+    glVertexArrayVertexBuffer(_VAO, 3, _ColorBuffer, 0, GRASS_COLOR_BUFFER_ELEMENT_SIZE);
 
     // rotations
+    glEnableVertexArrayAttrib(_VAO, 4);
+    glVertexArrayAttribFormat(_VAO, 4, GRASS_ROTATION_NB_ELEMENT, GL_FLOAT, GL_FALSE, 0);
+    glVertexArrayAttribBinding(_VAO, 4, 4);
+    glVertexArrayVertexBuffer(_VAO, 4, _RotationBuffer, 0, GRASS_ROTATION_BUFFER_ELEMENT_SIZE);
+
+    // tilt
     glEnableVertexArrayAttrib(_VAO, 5);
-    glVertexArrayAttribFormat(_VAO, 5, GRASS_ROTATION_NB_ELEMENT, GL_FLOAT, GL_FALSE, 0);
+    glVertexArrayAttribFormat(_VAO, 5, GRASS_TILT_NB_ELEMENT, GL_FLOAT, GL_FALSE, 0);
     glVertexArrayAttribBinding(_VAO, 5, 5);
-    glVertexArrayVertexBuffer(_VAO, 5, _RotationBuffer, 0, GRASS_ROTATION_BUFFER_ELEMENT_SIZE);
+    glVertexArrayVertexBuffer(_VAO, 5, _TiltBuffer, 0, GRASS_TILT_BUFFER_ELEMENT_SIZE);
+
+    // bend
+    glEnableVertexArrayAttrib(_VAO, 6);
+    glVertexArrayAttribFormat(_VAO, 6, GRASS_BEND_NB_ELEMENT, GL_FLOAT, GL_FALSE, 0);
+    glVertexArrayAttribBinding(_VAO, 6, 6);
+    glVertexArrayVertexBuffer(_VAO, 6, _BendBuffer, 0, GRASS_BEND_BUFFER_ELEMENT_SIZE);
     
     error = glGetError();
     if (error != GL_NO_ERROR) {
@@ -162,15 +176,17 @@ void GrassTile::render(Shaders* shaders){
     glDrawArrays(GL_POINTS, 0, _NbGrassBlades);
 }
 
-GLuint GrassTile::_IdCounter = 0;
+GLuint GrassTile::_IdCounter = 1;
 
 Grass::Grass(){
     glm::vec2 curPos = glm::vec2();
     for(GLuint i = 0; i<_NbTiles; i++){
         curPos.x = (i % _TileNbCols) * _TileWidth;
         curPos.y = (i / _TileNbLines) * _TileHeight;
-        GrassLOD lod = i == 0 ? GRASS_HIGH_LOD : GRASS_LOW_LOD;
-        _Tiles.push_back(new GrassTile(curPos, lod));
+        // GrassLOD lod = i == 0 ? GRASS_HIGH_LOD : GRASS_LOW_LOD;
+        // GrassLOD lod = GRASS_HIGH_LOD;
+        _Tiles.push_back(new GrassTile(curPos));
+        // std::cout << "tile id: " << _Tiles[_Tiles.size()-1]->_TileId << std::endl;
     }
 }
 

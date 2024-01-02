@@ -16,13 +16,14 @@ const int NB_QUAD_LOW_LOD = 2;
 
 const vec4 red = vec4(1.f, 0.f, 0.f, 1.f);
 
-in VertexData {
+in VertexData{
     vec3 _Position;
-    vec2 _Facing;
     float _Height;
     float _Width;
     vec3 _Color;
     float _Rotation;
+    float _Tilt;
+    vec2 _Bend;
 } vertexData[];
 
 out vec4 geomFragCol;
@@ -35,23 +36,30 @@ mat3 getRotationMatrix(float rotation){
 }
 
 
-void getVerticesPositions(vec3 pos, float width, float height, out vec3 positions[NB_VERT_HIGH_LOD]){
+vec2 quadraticBezierCurve(float t, vec2 P0, vec2 P1, vec2 P2){
+    return (1-t)*(1-t)*P0 + 2*(1-t)*t*P1 + t*t*P2;
+}
+
+void getVerticesPositions(vec3 pos, float width, float height, float tilt, vec2 bend, out vec3 positions[NB_VERT_HIGH_LOD]){
     int nbVert = tileLOD == HIGH_LOD ? NB_VERT_HIGH_LOD : NB_VERT_LOW_LOD;
 
-    float heightDelta = height / (nbVert / 2);
     float minWidth = width / 5.f;
     float widthDelta = minWidth / nbVert;
-    float curHeight = 0.f;
     float curWidth = width / 2;
 
+    vec2 P0 = vec2(0.f);
+    vec2 P1 = bend;
+    vec2 P2 = vec2(tilt, height);
+
     for(int i=0; i<nbVert-1; i+=2){
-        positions[i] = pos + vec3(-curWidth, curHeight, 0.f);
-        positions[i+1] = pos + vec3(curWidth, curHeight, 0.f);
-        curHeight += heightDelta;
+        float t = i / (1.f * nbVert);
+        vec2 bendAndTilt = quadraticBezierCurve(t, P0, P1, P2);
+        positions[i] = pos + vec3(-curWidth, bendAndTilt.y, bendAndTilt.x);
+        positions[i+1] = pos + vec3(curWidth, bendAndTilt.y, bendAndTilt.x);
         curWidth -= widthDelta;
     }
 
-    positions[nbVert-1] = pos + vec3(0.f, height, 0.f);
+    positions[nbVert-1] = pos + vec3(0.f, height, tilt);
 }
 
 vec4 getWorldPos(vec3 center, vec3 positions[NB_VERT_HIGH_LOD], int vertex, float rotation){
@@ -105,14 +113,15 @@ void createTriangles(vec3 center, vec3 positions[NB_VERT_HIGH_LOD], float rotati
 
 void main(){
     vec3 pos = vertexData[0]._Position;
-    vec2 facing = vertexData[0]._Facing;
     float height = vertexData[0]._Height;
     float width = vertexData[0]._Width;
     vec4 color = vec4(vertexData[0]._Color, 1.f);
     float rotation = vertexData[0]._Rotation;
+    float tilt = vertexData[0]._Tilt;
+    vec2 bend = vertexData[0]._Bend;
 
     // float halfWidth = 10.f;
     vec3 positions[NB_VERT_HIGH_LOD];
-    getVerticesPositions(pos, width, height, positions);
+    getVerticesPositions(pos, width, height, tilt, bend, positions);
     createTriangles(pos, positions, rotation, color);
 }

@@ -9,16 +9,18 @@
 enum GrassSizes{
     GRASS_POSITION_NB_ELEMENT = 3,
     GRASS_COLOR_NB_ELEMENT = 3,
-    GRASS_FACING_NB_ELEMENT = 2,
     GRASS_HEIGHT_NB_ELEMENT = 1,
     GRASS_WIDTH_NB_ELEMENT = 1,
     GRASS_ROTATION_NB_ELEMENT = 1,
+    GRASS_TILT_NB_ELEMENT = 1,
+    GRASS_BEND_NB_ELEMENT = 2,
     GRASS_POSITION_BUFFER_ELEMENT_SIZE = 3*sizeof(float),
-    GRASS_FACING_BUFFER_ELEMENT_SIZE = 2*sizeof(float),
     GRASS_HEIGHT_BUFFER_ELEMENT_SIZE = sizeof(float),
     GRASS_WIDTH_BUFFER_ELEMENT_SIZE = sizeof(float),
     GRASS_COLOR_BUFFER_ELEMENT_SIZE = 3*sizeof(float),
     GRASS_ROTATION_BUFFER_ELEMENT_SIZE = sizeof(float),
+    GRASS_TILT_BUFFER_ELEMENT_SIZE = sizeof(float),
+    GRASS_BEND_BUFFER_ELEMENT_SIZE = 2*sizeof(float),
 };
 
 enum GrassLOD{
@@ -26,7 +28,11 @@ enum GrassLOD{
     GRASS_LOW_LOD = 2,
 };
 
+class Grass;
+
 class GrassTile{
+
+    friend Grass;
 
     private:
         static GLuint _IdCounter;
@@ -43,11 +49,12 @@ class GrassTile{
 
         // buffers compute shader
         GLuint _PositionBuffer;
-        GLuint _FacingBuffer;
         GLuint _HeightBuffer;
         GLuint _WidthBuffer;
         GLuint _ColorBuffer;
         GLuint _RotationBuffer;
+        GLuint _TiltBuffer;
+        GLuint _BendBuffer;
         ComputeShader* _ComputeShader = nullptr;
 
         // buffers vertex shader

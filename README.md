@@ -53,4 +53,6 @@ To try different level of details, we will try to add new tiles.
 
 ## Step 6 bending
 
-- We then add bending using cubic bezier curves to control the bend;
+We Now add bending using bezier curves to control the bend;
+
+- We use 3 control points, one at the origin of the blade. One at the tip of the blade which will control the tilt of the blade. One called "midpoint" which controls the bending of the curve. ![Bended blade](report/bendedBlades.png)
