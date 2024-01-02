@@ -45,6 +45,7 @@ void Application::initGLFW() {
 
 void Application::update(){
     updateDt();
+    _Grass->update(_DeltaTime, _Camera->getPosition());
 }
 
 void Application::render(){

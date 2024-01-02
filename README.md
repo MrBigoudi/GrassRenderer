@@ -48,4 +48,6 @@ To try different level of details, we will try to add new tiles.
 
 - Then, we create two kind of LODs for the tiles. Some tiles have high lod and others have low. Grass blades of high lod are made of 15 vertices and the ones of low lod are made of 7 vertices ![Multiple LOD](report/lodBlades.png).
 
-- Finally, we update the LOD value of the tile with respect to it's distance to the camera's position.
+- Finally, we update the LOD value of the tile with respect to it's distance to the camera's position:
+- When the tile is far from the camera ![Far lod](report/farLOD.png) 
+- When the tile is near the camera ![Near LOD](report/nearLOD.png)

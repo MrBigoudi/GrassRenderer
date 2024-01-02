@@ -65,6 +65,16 @@ class GrassTile{
         
         void dispatchComputeShader(GLuint tileWidth, GLuint tileHeight);
         void render(Shaders* shaders);
+        void setLOD(GrassLOD newLOD){
+            _LOD = newLOD;
+        }
+        glm::vec3 getPos(){
+            glm::vec3 tmp;
+            tmp.x = _TilePos.x;
+            tmp.y = 0.f;
+            tmp.z = _TilePos.y;
+            return tmp;
+        }
 };
 
 
@@ -75,10 +85,12 @@ class Grass{
         GLuint _TileHeight = 16;
         GLuint _TileNbCols = 2;
         GLuint _TileNbLines = 2;
+        float _RadiusHighLOD = 50.f;
 
         std::vector<GrassTile*> _Tiles;
 
     public:
         Grass();
         void render(Shaders* shaders);
+        void update(float dt, const glm::vec3& cameraPosition);
 };

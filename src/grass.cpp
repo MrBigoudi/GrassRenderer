@@ -1,6 +1,7 @@
 #include "grass.hpp"
 #include "computeShader.hpp"
 #include "shaders.hpp"
+#include "utils.hpp"
 #include <GL/glu.h>
 
 void GrassTile::initBuffers(){
@@ -177,5 +178,23 @@ void Grass::render(Shaders* shaders){
     for(auto& tile : _Tiles){
         tile->dispatchComputeShader(_TileWidth, _TileHeight);
         tile->render(shaders);
+    }
+}
+
+void Grass::update(float dt, const glm::vec3& cameraPosition){
+    // update tiles lod
+    for(auto& tile : _Tiles){
+        // get tile's position
+        glm::vec3 tileUpLeft = tile->getPos();
+        glm::vec3 tileUpRight = tile->getPos() + glm::vec3(_TileWidth, 0.f, 0.f);
+        glm::vec3 tileDownLeft = tile->getPos() + glm::vec3(0.f, 0.f, _TileHeight);
+        glm::vec3 tileDownRight = tile->getPos() + glm::vec3(_TileWidth, 0.f, _TileHeight);
+        // check if boundig box within camera radius
+        if(doCircleRectangleIntersect(cameraPosition, _RadiusHighLOD, 
+            tileUpLeft, tileUpRight, tileDownLeft, tileDownRight)){
+            tile->setLOD(GRASS_HIGH_LOD);
+        } else {
+            tile->setLOD(GRASS_LOW_LOD);
+        }
     }
 }
