@@ -56,3 +56,10 @@ To try different level of details, we will try to add new tiles.
 We Now add bending using bezier curves to control the bend;
 
 - We use 3 control points, one at the origin of the blade. One at the tip of the blade which will control the tilt of the blade. One called "midpoint" which controls the bending of the curve. ![Bended blade](report/bendedBlades.png)
+
+## Step 7 rounded normals + lighting
+
+To make the blade look more like real grass, we will tweak their normals.
+
+- We start by derivating the bezier curves to get the tangent to the blade at each vertex. By crossing with the tangent on the width of the blade we get the surface normal at each vertex. To give the blades a rounded aspect, we then then rotate the normals; to the left for the vertices on the left side of the blade and to the right for the vertices on the right side.
+![Rounded normals](report/bladesRoundedNormals.png)

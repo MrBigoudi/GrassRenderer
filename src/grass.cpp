@@ -1,5 +1,6 @@
 #include "grass.hpp"
 #include "computeShader.hpp"
+#include "material.hpp"
 #include "shaders.hpp"
 #include "utils.hpp"
 #include <GL/glu.h>
@@ -180,6 +181,7 @@ GLuint GrassTile::_IdCounter = 1;
 
 Grass::Grass(){
     glm::vec2 curPos = glm::vec2();
+    _Material = MaterialPointer(new Material());
     for(GLuint i = 0; i<_NbTiles; i++){
         curPos.x = (i % _TileNbCols) * _TileWidth;
         curPos.y = (i / _TileNbLines) * _TileHeight;
@@ -191,6 +193,7 @@ Grass::Grass(){
 }
 
 void Grass::render(Shaders* shaders){
+    _Material->setShaderValues(shaders);
     for(auto& tile : _Tiles){
         tile->dispatchComputeShader(_TileWidth, _TileHeight);
         tile->render(shaders);

@@ -29,6 +29,10 @@ class Shaders{
         */
         GLuint _Id = -1;
 
+        std::string _VertPath = "";
+        std::string _FragPath = "";
+        std::string _GeomPath = "";
+
     public:
         /**
          * Basic constructor

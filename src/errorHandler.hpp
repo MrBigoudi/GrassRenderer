@@ -26,6 +26,7 @@ enum ErrorCodes{
     IO_ERROR,
     OUT_OF_RANGE,
     BAD_VALUE,
+    WRONG_TYPE,
 };
 
 /**

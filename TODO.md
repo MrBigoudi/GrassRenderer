@@ -1,10 +1,8 @@
 # Todo list
 
 - fix compute shader initialization (1 weird blade)
-- update LOD in term of distances
-
-- add bezier curve to shape the grass
-- add round normals
 - add lighting view
 
+- add fps + tests with time spent on each function
+- add comments
 - add imgui with the input settings

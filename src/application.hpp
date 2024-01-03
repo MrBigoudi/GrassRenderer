@@ -2,12 +2,17 @@
 
 #include "axis.hpp"
 #include "camera.hpp"
+#include "errorHandler.hpp"
 #include "shaders.hpp"
 #include "grass.hpp"
+#include "light.hpp"
+#include "sun.hpp"
 
 #include <glad/gl.h>
 #include <GL/gl.h>
 #include <GLFW/glfw3.h>
+
+using PointLights = std::vector<LightPointer>;
 
 class Application{
     private:
@@ -27,6 +32,10 @@ class Application{
         bool _FirstMouse = true;
         double _LastMouseX;
         double _LastMouseY;
+
+        PointLights _PointLights = {};
+        GLuint _NbPointLights = 0;
+        Sun* _Sun = nullptr;
 
     private:
         void update();
@@ -55,6 +64,36 @@ class Application{
             if(glfwGetKey(_Window, GLFW_KEY_F) == GLFW_PRESS){
                 setWireframeMode();
             }
+        }
+
+        void addPointLight(const LightPointer& light){
+            if(light->getType() != LightType::PointLight){
+                fprintf(stderr, "Must assign a point light to the scene's point lights!");
+                ErrorHandler::handle(ErrorCodes::WRONG_TYPE);
+                return;
+            }
+            _PointLights.push_back(light);
+            _NbPointLights++;
+        }
+
+        void sendPointLight(){
+            _Shaders->setInt("nbPointLights", _NbPointLights);
+            for(GLuint i=0; i<_NbPointLights; i++){
+                std::string name = "pointLights[" + std::to_string(i) + "]";
+                _PointLights[i]->sendGPU(_Shaders, name);
+            }
+        }
+
+        void initLights(){
+            glm::vec3 lightPos = glm::vec3(0.f, 2.f, 0.f);
+            glm::vec4 lightCol = glm::vec4(1.f, 1.f, 1.f, 1.f);
+            addPointLight(
+                LightPointer(
+                    new Light(LightType::PointLight, lightPos, lightCol)
+                )
+            );
+            sendPointLight();
+            _Sun = new Sun(_PointLights[0]);
         }
 
     public:

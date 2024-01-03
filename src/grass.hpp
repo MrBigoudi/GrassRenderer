@@ -1,6 +1,7 @@
 #pragma once
 
 #include "computeShader.hpp"
+#include "material.hpp"
 #include "shaders.hpp"
 #include <glad/gl.h>
 #include <glm/glm.hpp>
@@ -38,8 +39,8 @@ class GrassTile{
         static GLuint _IdCounter;
 
     private:
-        // GLuint _NbGrassBlades = 1024;
         GLuint _NbGrassBlades = 2048;
+        // GLuint _NbGrassBlades = 2 << 15;
         GLuint _GridNbCols = 16;
         GLuint _GridNbLines = 16;
         // GLfloat _TileLength = 0.5f;
@@ -94,6 +95,7 @@ class Grass{
         GLuint _TileNbLines = 2;
         float _RadiusHighLOD = 50.f;
 
+        MaterialPointer _Material = nullptr;
         std::vector<GrassTile*> _Tiles;
 
     public:

@@ -4,6 +4,9 @@
 
 Shaders::Shaders(const std::string& vert, const std::string& frag, const std::string& geom){
     _Id = glCreateProgram();
+    _VertPath = vert;
+    _FragPath = frag;
+    _GeomPath = geom;
     checkID("Failed to init the program!\n");
     bool hasGeom = geom.compare("") != 0;
 
@@ -58,6 +61,7 @@ const std::string Shaders::openShaderFile(const std::string& path) const{
 GLuint Shaders::compileShader(const std::string& code, ShaderType type) const{
     GLuint shader = 0;
     std::string typeName = "";
+    std::string shaderPath = "";
     int success;
     char infoLog[512];
 
@@ -65,14 +69,17 @@ GLuint Shaders::compileShader(const std::string& code, ShaderType type) const{
         case VERT:
             shader = glCreateShader(GL_VERTEX_SHADER);
             typeName = "vertex";
+            shaderPath = _VertPath;
             break;
         case FRAG:
             shader = glCreateShader(GL_FRAGMENT_SHADER);
             typeName = "fragment";
+            shaderPath = _FragPath;
             break;
         case GEOM:
             shader = glCreateShader(GL_GEOMETRY_SHADER);
             typeName = "geometry";
+            shaderPath = _GeomPath;
             break;
     }
 
@@ -82,7 +89,9 @@ GLuint Shaders::compileShader(const std::string& code, ShaderType type) const{
     glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
     if(!success){
         glGetShaderInfoLog(shader, 512, NULL, infoLog);
-        fprintf(stderr, "Failed to compile the %s shader: \n\t%s!\n", typeName.c_str(), infoLog);
+        fprintf(stderr, "Failed to compile the %s shader %s: \n\t%s!\n", 
+            typeName.c_str(), shaderPath.c_str(), infoLog
+        );
         ErrorHandler::handle(ErrorCodes::GL_ERROR);
     };
 
