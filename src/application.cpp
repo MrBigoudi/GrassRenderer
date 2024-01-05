@@ -48,8 +48,8 @@ void Application::update(){
 }
 
 void Application::render(){
-    glClearColor(0.383f, 0.632f, 0.800f, 1.0f);
-    // glClearColor(0.f, 0.f, 0.f, 1.0f);
+    // glClearColor(0.383f, 0.632f, 0.800f, 1.0f);
+    glClearColor(0.f, 0.f, 0.1f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     _Grass->render(_Shaders.get());
     _Axis->render();
@@ -101,7 +101,13 @@ void Application::init(){
     glEnable(GL_DEPTH_TEST);
     GLenum error = glGetError();
     if (error != GL_NO_ERROR) {
-        fprintf(stderr, "OpenGL error: %d\n", error);
+        fprintf(stderr, "Failed to enable z-buffer: %d\n", error);
+        ErrorHandler::handle(ErrorCodes::GL_ERROR);
+    }
+    glDisable(GL_CULL_FACE);
+    error = glGetError();
+    if (error != GL_NO_ERROR) {
+        fprintf(stderr, "Failed to disable backface culling : %d\n", error);
         ErrorHandler::handle(ErrorCodes::GL_ERROR);
     }
 }
@@ -118,6 +124,7 @@ void Application::run(){
         _Shaders->setMat4f("proj", projection);
         glm::mat4 view = _Camera->getView();
         _Shaders->setMat4f("view", view);
+        _Shaders->setVec3f("camPos", _Camera->getPosition());
 
         _Axis->setMatrices(view, projection);
         // end of test

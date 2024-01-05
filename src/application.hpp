@@ -85,7 +85,7 @@ class Application{
         }
 
         void initLights(){
-            glm::vec3 lightPos = glm::vec3(0.f, 2.f, 0.f);
+            glm::vec3 lightPos = glm::vec3(0.f, 10.f, 0.f);
             glm::vec4 lightCol = glm::vec4(1.f, 1.f, 1.f, 1.f);
             addPointLight(
                 LightPointer(

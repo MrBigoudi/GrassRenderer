@@ -233,6 +233,10 @@ float getRotation(uint id){
     return radians(rand(vec2(id*tileID, id+tileID)) * 360.f);
 }
 
+float getTilt(uint id, float height){
+    return rand(vec2(id, 0.f), height / 3.f, height);
+}
+
 void main() {
     uint instanceIndex = gl_GlobalInvocationID.x;
     // Store data in buffers
@@ -243,7 +247,7 @@ void main() {
     float width = rand(vec2(tileID, instanceIndex), MIN_WIDTH, MAX_WIDTH);
     vec3 color = getColor(clumpId);
     float rotation = getRotation(instanceIndex);
-    float tilt = rand(vec2(clumpId, 0.f), height / 3.f, height);
+    float tilt = getTilt(clumpId, height);
     vec2 bend = getBend(instanceIndex, clumpId, height, tilt);
 
     positions[instanceIndex] = position;

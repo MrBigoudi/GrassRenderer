@@ -18,22 +18,22 @@ class Material{
         /**
          * The ambient local illumination
         */
-        GLfloat _Ambient = 0.1f;
+        GLfloat _Ambient = 0.05f;
         
         /**
          * The diffuse property
         */
-        GLfloat _Diffuse = 0.8f;
+        GLfloat _Diffuse = 1.f;
 
         /**
          * The specular property
         */
-        GLfloat _Specular = 0.3f;
+        GLfloat _Specular = 1.f;
 
         /**
          * The shininess
         */
-        GLfloat _Shininess = 20.0f;
+        GLfloat _Shininess = 32.0f;
 
 
     public:
