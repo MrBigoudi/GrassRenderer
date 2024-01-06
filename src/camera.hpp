@@ -61,6 +61,10 @@ class Camera{
             updateCameraVectors();
         }
 
+        glm::vec3 getAt(){
+            return _At;
+        }
+
         glm::vec3 getPosition(){
             return _Eye;
         }

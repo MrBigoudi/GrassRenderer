@@ -36,8 +36,8 @@ vec3 getNormal(){
     vec3 norm    = normalize(geomFragNormal);
     vec3 viewDir = normalize(camPos - geomFragPos);
 
-    if (!gl_FrontFacing)
-        norm = -norm;
+    // if(gl_FrontFacing)
+        // norm = -norm;
 
     return norm;
 }
@@ -95,10 +95,10 @@ vec3 getSpecular(vec3 oColor){
 
 void main(){
     vec3 color = geomFragCol;
-    // vec3 color = geomFragNormal;
-    vec3 ambient = getAmbient(geomFragCol);
-    vec3 diffuse = getDiffuse(geomFragCol);
-    vec3 specular = getSpecular(geomFragCol);
-    oFragCol = vec4(ambient + diffuse + specular, 1.f);
-    // oFragCol = vec4(geomFragNormal, 1.f);
+    // // vec3 color = geomFragNormal;
+    // vec3 ambient = getAmbient(color);
+    // vec3 diffuse = getDiffuse(color);
+    // vec3 specular = getSpecular(color);
+    // oFragCol = vec4(ambient + diffuse + specular, 1.f);
+    oFragCol = vec4(color, 1.f);
 }

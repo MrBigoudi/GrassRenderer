@@ -247,7 +247,9 @@ void main() {
     float width = rand(vec2(tileID, instanceIndex), MIN_WIDTH, MAX_WIDTH);
     vec3 color = getColor(clumpId);
     float rotation = getRotation(instanceIndex);
+    // float rotation = PI / 2.f;
     float tilt = getTilt(clumpId, height);
+    // float tilt = 0.f;
     vec2 bend = getBend(instanceIndex, clumpId, height, tilt);
 
     positions[instanceIndex] = position;

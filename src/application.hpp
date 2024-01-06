@@ -92,7 +92,7 @@ class Application{
                     new Light(LightType::PointLight, lightPos, lightCol)
                 )
             );
-            sendPointLight();
+            // sendPointLight();
             _Sun = new Sun(_PointLights[0]);
         }
 

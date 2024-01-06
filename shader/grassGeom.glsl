@@ -32,6 +32,8 @@ out vec3 geomFragCol;
 out vec3 geomFragNormal;
 out vec3 geomFragPos;
 
+uniform vec3 camPos;
+uniform vec3 camAt;
 
 mat3 getRotationMatrix(float rotation){
     return mat3(cos(rotation), 0.f, sin(rotation),
@@ -105,6 +107,9 @@ vec4 getWorldPos(vec3 center, vec3 positions[NB_VERT_HIGH_LOD], int vertex, floa
     return getWorldPos(center, positions[vertex], rotation);
 }
 
+vec3 getRotatedNormals(vec3 normal, float rotation){
+    return normalize(getRotationMatrix(rotation) * normal);
+}
 
 void createTriangle(vec3 center, vec3 positions[NB_VERT_HIGH_LOD], vec3 normals[NB_VERT_HIGH_LOD], 
     float rotation, vec3 color, int indices[3]){
@@ -113,8 +118,9 @@ void createTriangle(vec3 center, vec3 positions[NB_VERT_HIGH_LOD], vec3 normals[
         idx = indices[i];
         vec3 modelPos = getModelPos(center, positions, idx, rotation);
         vec4 worldPos = getWorldPos(center, positions, idx, rotation);
+        vec3 normal = getRotatedNormals(normals[idx], rotation);
         geomFragCol = color;
-        geomFragNormal = normals[idx];
+        geomFragNormal = normal;
         geomFragPos = modelPos;
         gl_Position = worldPos;
         EmitVertex();    
@@ -153,14 +159,34 @@ void createTriangles(vec3 center, float rotation, vec3 color,
     createTriangle(center, positions, normals, rotation, color, indices);
 }
 
+vec3 getAvgNormal(float tilt, float height){
+    vec3 P0 = vec3(0.f);
+    vec3 P1 = vec3(tilt, height, 0.f);
+    vec3 widthTangent = vec3(0.f, 0.f, 1.f);
+    vec3 heightTangent = normalize(P1-P0);
+    return cross(heightTangent, widthTangent);
+}
+
+float getRotation(float tilt, float height){
+    float rotation = vertexData[0]._Rotation;
+    vec3 normal = getAvgNormal(tilt, height);
+    normal = (view*vec4(getRotatedNormals(normal, rotation), 1.f)).xyz;
+
+    vec3 camDir = vec3(0.f, 0.f, -1.f);
+    float dotProduct = dot(normalize(camDir), normalize(normal));
+    rotation += acos(dotProduct) / 3.f;
+
+    return rotation;
+}
+
 void main(){
     vec3 pos = vertexData[0]._Position;
     float height = vertexData[0]._Height;
     float width = vertexData[0]._Width;
     vec3 color = vertexData[0]._Color;
-    float rotation = vertexData[0]._Rotation;
     float tilt = vertexData[0]._Tilt;
     vec2 bend = vertexData[0]._Bend;
+    float rotation = getRotation(tilt, height);
 
     vec3 positions[NB_VERT_HIGH_LOD];
     vec3 normals[NB_VERT_HIGH_LOD];

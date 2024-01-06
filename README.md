@@ -57,9 +57,16 @@ We Now add bending using bezier curves to control the bend;
 
 - We use 3 control points, one at the origin of the blade. One at the tip of the blade which will control the tilt of the blade. One called "midpoint" which controls the bending of the curve. ![Bended blade](report/bendedBlades.png)
 
-## Step 7 rounded normals + lighting
+## Step 7 rounded normals
 
-To make the blade look more like real grass, we will tweak their normals.
+To make the blade look more like real grass, we will tweak their normals. In the GDC talk, Ghost of Tshushima's developpers used an arist made normal map. Because we are not artists, we have decided to try coding a similar effect.
 
-- We start by derivating the bezier curves to get the tangent to the blade at each vertex. By crossing with the tangent on the width of the blade we get the surface normal at each vertex. To give the blades a rounded aspect, we then then rotate the normals; to the left for the vertices on the left side of the blade and to the right for the vertices on the right side.
+- We start by derivating the bezier curves to get the tangent to the blade at each vertex. By crossing with the tangent on the width of the blade we get the surface normal at each vertex. To give the blades a rounded aspect, we then rotate the normals; to the left for the vertices on the left side of the blade and to the right for the vertices on the right side.
 ![Rounded normals](report/bladesRoundedNormals.png)
+
+## Step 8 auto rotation
+
+One idea to make the grass looks more dense without adding any information is to make the blades rotate as much as they can to avoid having their normals perpendicular to the view direction. Indeed, if the normals are orthogonal, it means that the blade will appear super slim and the screen will feel emptier. In their GDC talk, developpers of Ghost of Tshushima explained that they have made the blade "fold" toward the camera. Our idea is a bit simpler as we only slightly tilt the rotation of the blade around the y-axis to make it stay in front of the camera more often.
+![Auto rotation 1](report/bladeAutoRotate1.png)
+![Auto rotation 2](report/bladeAutoRotate2.png)
+We can also adjust the effect in the geometry shader. However, if the rotation step is too big, the movement will be noticeable and the effect will seems more weird than helpful.

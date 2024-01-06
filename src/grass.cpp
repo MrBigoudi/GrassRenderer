@@ -193,7 +193,7 @@ Grass::Grass(){
 }
 
 void Grass::render(Shaders* shaders){
-    _Material->setShaderValues(shaders);
+    // _Material->setShaderValues(shaders);
     for(auto& tile : _Tiles){
         tile->dispatchComputeShader(_TileWidth, _TileHeight);
         tile->render(shaders);
