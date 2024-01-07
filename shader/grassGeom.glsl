@@ -19,10 +19,10 @@ const vec4 red = vec4(1.f, 0.f, 0.f, 1.f);
 const float PI = 3.1416f;
 
 in VertexData{
-    vec3 _Position;
+    vec4 _Position;
     float _Height;
     float _Width;
-    vec3 _Color;
+    vec4 _Color;
     float _Rotation;
     float _Tilt;
     vec2 _Bend;
@@ -180,10 +180,10 @@ float getRotation(float tilt, float height){
 }
 
 void main(){
-    vec3 pos = vertexData[0]._Position;
+    vec3 pos = vertexData[0]._Position.xyz;
     float height = vertexData[0]._Height;
     float width = vertexData[0]._Width;
-    vec3 color = vertexData[0]._Color;
+    vec3 color = vertexData[0]._Color.xyz;
     float tilt = vertexData[0]._Tilt;
     vec2 bend = vertexData[0]._Bend;
     float rotation = getRotation(tilt, height);

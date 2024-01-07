@@ -57,16 +57,32 @@ We Now add bending using bezier curves to control the bend;
 
 - We use 3 control points, one at the origin of the blade. One at the tip of the blade which will control the tilt of the blade. One called "midpoint" which controls the bending of the curve. ![Bended blade](report/bendedBlades.png)
 
-## Step 7 rounded normals
+## Step 7 auto rotation
+
+One idea to make the grass looks more dense without adding any information is to make the blades rotate as much as they can to avoid having their normals perpendicular to the view direction. Indeed, if the normals are orthogonal, it means that the blade will appear super slim and the screen will feel emptier. In their GDC talk, developpers of Ghost of Tshushima explained that they have made the blade "fold" toward the camera. Our idea is a bit simpler as we only slightly tilt the rotation of the blade around the y-axis to make it stay in front of the camera more often.
+![Auto rotation 1](report/bladeAutoRotate1.png)
+![Auto rotation 2](report/bladeAutoRotate2.png)
+We can also adjust the effect in the geometry shader. However, if the rotation step is too big, the movement will be noticeable and the effect will seems more weird than helpful.
+
+## Step 8 rounded normals
 
 To make the blade look more like real grass, we will tweak their normals. In the GDC talk, Ghost of Tshushima's developpers used an arist made normal map. Because we are not artists, we have decided to try coding a similar effect.
 
 - We start by derivating the bezier curves to get the tangent to the blade at each vertex. By crossing with the tangent on the width of the blade we get the surface normal at each vertex. To give the blades a rounded aspect, we then rotate the normals; to the left for the vertices on the left side of the blade and to the right for the vertices on the right side.
 ![Rounded normals](report/bladesRoundedNormals.png)
 
-## Step 8 auto rotation
+## Step 9 debugging
 
-One idea to make the grass looks more dense without adding any information is to make the blades rotate as much as they can to avoid having their normals perpendicular to the view direction. Indeed, if the normals are orthogonal, it means that the blade will appear super slim and the screen will feel emptier. In their GDC talk, developpers of Ghost of Tshushima explained that they have made the blade "fold" toward the camera. Our idea is a bit simpler as we only slightly tilt the rotation of the blade around the y-axis to make it stay in front of the camera more often.
-![Auto rotation 1](report/bladeAutoRotate1.png)
-![Auto rotation 2](report/bladeAutoRotate2.png)
-We can also adjust the effect in the geometry shader. However, if the rotation step is too big, the movement will be noticeable and the effect will seems more weird than helpful.
+As visible in some of the previous figures, a lot of blades were stacked at the origin. After a lot of debugging, it appeared that the [std430 packing layout rules](https://www.oreilly.com/library/view/opengl-programming-guide/9780132748445/app09lev1sec3.html) is doing compiler optimizations and is aligning the stack to `4N` bytes when using elements made of `3` values. The issue was then due to the fact that I was using `vec3` for both the colors and the positions. This was creating a shift of one value for each element. For example, with `4` blades of grass set at position `(id,0,0)`, I would get:
+- `position blade 0 = (0, 0 ,0),
+- `position blade 1 = (0, 1 ,0),
+- `position blade 2 = (0, 0 ,2),
+- `position blade 3 = (0, 0 ,0)
+
+instead of
+- `position blade 0 = (0, 0 ,0),
+- `position blade 1 = (1, 0 ,0),
+- `position blade 2 = (2, 0 ,0),
+- `position blade 3 = (3, 0 ,0)
+
+resulting in a lot of blades being at position `(0,0,0)` and with a black color `(0,0,0)`.

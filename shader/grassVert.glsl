@@ -1,7 +1,7 @@
 #version 450 core
 	
 layout(binding = 0, std430) readonly buffer positions{
-    vec3 iPosition[];  // Grass blade position
+    vec4 iPosition[];  // Grass blade position
 };
 
 layout(binding = 1, std430) readonly buffer heights{
@@ -13,7 +13,7 @@ layout(binding = 2, std430) readonly buffer widths{
 };
 
 layout(binding = 3, std430) readonly buffer colors{
-    vec3 iColor[];  // Grass blade color
+    vec4 iColor[];  // Grass blade color
 };
 
 layout(binding = 4, std430) readonly buffer rotations{
@@ -30,10 +30,10 @@ layout(binding = 6, std430) readonly buffer bends{
 
 
 out VertexData{
-    vec3 _Position;
+    vec4 _Position;
     float _Height;
     float _Width;
-    vec3 _Color;
+    vec4 _Color;
     float _Rotation;
     float _Tilt;
     vec2 _Bend;

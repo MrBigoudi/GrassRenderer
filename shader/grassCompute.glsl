@@ -5,7 +5,7 @@
 layout (local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
 
 layout(binding = 0, std430) buffer PositionsBuffer {
-    vec3 positions[];
+    vec4 positions[];
 };
 
 layout(binding = 1, std430) buffer HeightsBuffer {
@@ -17,7 +17,7 @@ layout(binding = 2, std430) buffer WidthsBuffer {
 };
 
 layout(binding = 3, std430) buffer ColorsBuffer {
-    vec3 colors[];
+    vec4 colors[];
 };
 
 layout(binding = 4, std430) buffer RotationsBuffer {
@@ -181,8 +181,8 @@ uint findNearestNeighbour(vec3 bladePosition, uint nbIntersections, vec2 voronoi
 // Main functions
 
 // give a random position in the tile for the blade
-vec3 getRandomPosition(uint id){
-    vec3 newPos = vec3(0.f);
+vec4 getRandomPosition(uint id){
+    vec4 newPos = vec4(0.f, 0.f, 0.f, 1.f);
 
     float randX = rand(vec2(id, tileID));
     float randZ = rand(vec2(tileID, id));
@@ -190,7 +190,7 @@ vec3 getRandomPosition(uint id){
     newPos.x = randX * float(tileWidth);
     newPos.z = randZ * float(tileHeight);
 
-    vec3 curTilePos = vec3(tilePos.x, 0.f, tilePos.y);
+    vec4 curTilePos = vec4(tilePos.x, 0.f, tilePos.y, 1.f);
 
     return newPos + curTilePos;
 }
@@ -221,11 +221,12 @@ vec2 getBend(uint id, uint clumpId, float height, float tilt){
     return vec2(randX, randY);
 }
 
-vec3 getColor(uint clumpId){
-    return vec3(
+vec4 getColor(uint clumpId){
+    return vec4(
         0.f,
         rand(vec2(clumpId, clumpId), MIN_GREEN, MAX_GREEN),
-        0.f
+        0.f,
+        1.f
     );
 }
 
@@ -238,19 +239,29 @@ float getTilt(uint id, float height){
 }
 
 void main() {
-    uint instanceIndex = gl_GlobalInvocationID.x;
+    uvec3 globalID = gl_GlobalInvocationID;
+    int instanceIndex = int(globalID.x) 
+                        + int(globalID.y) * int(gl_NumWorkGroups.x);
+                        + int(globalID.z) * int(gl_NumWorkGroups.x) * int(gl_NumWorkGroups.y);
     // Store data in buffers
 
-    vec3 position = getRandomPosition(instanceIndex);
-    uint clumpId = getClumpId(position);
+    vec4 position = getRandomPosition(instanceIndex);
+    uint clumpId = getClumpId(position.xyz);
     float height = rand(vec2(instanceIndex, tileID), MIN_HEIGHT, MAX_HEIGHT);
     float width = rand(vec2(tileID, instanceIndex), MIN_WIDTH, MAX_WIDTH);
-    vec3 color = getColor(clumpId);
+    vec4 color = getColor(clumpId);
     float rotation = getRotation(instanceIndex);
-    // float rotation = PI / 2.f;
     float tilt = getTilt(clumpId, height);
-    // float tilt = 0.f;
     vec2 bend = getBend(instanceIndex, clumpId, height, tilt);
+
+    // tmp
+    // vec4 position = vec4(instanceIndex+1.f, 0.f, 0.f, 1.f);
+    // float height = instanceIndex+1.f;
+    // float width = MIN_WIDTH;
+    // vec4 color = vec4(vec3(1.f, 1.f, 1.f) - vec3(1.f,1.f,1.f) * ((1.f*instanceIndex) / nbGrassBlades), 1.f);
+    // float rotation = 0.f;
+    // float tilt = 0.f;
+    // vec2 bend = vec2(instanceIndex+1.f, 0.f);
 
     positions[instanceIndex] = position;
     heights[instanceIndex] = height;

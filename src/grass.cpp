@@ -1,9 +1,11 @@
 #include "grass.hpp"
 #include "computeShader.hpp"
+#include "errorHandler.hpp"
 #include "material.hpp"
 #include "shaders.hpp"
 #include "utils.hpp"
 #include <GL/glu.h>
+#include <cstdlib>
 
 void GrassTile::initBuffers(){
     glCreateVertexArrays(1, &_VAO);
@@ -102,7 +104,6 @@ void GrassTile::dispatchComputeShader(GLuint tileWidth, GLuint tileHeight){
     glBindVertexArray(_VAO);
 
     _ComputeShader->setInt("nbGrassBlades", _NbGrassBlades);
-    // _ComputeShader->setFloat("tileLength", _TileLength);
     _ComputeShader->setInt("tileWidth", tileWidth);
     _ComputeShader->setInt("tileHeight", tileHeight);
     _ComputeShader->setInt("gridNbCols", _GridNbCols);
@@ -111,9 +112,33 @@ void GrassTile::dispatchComputeShader(GLuint tileWidth, GLuint tileHeight){
     _ComputeShader->setInt("tileID", (int)_TileId);
 
     // Dispatch the compute shader
-    glDispatchCompute(_NbGrassBlades, 1, 1);
-    glMemoryBarrier(GL_ALL_BARRIER_BITS);
 
+    // Set your initial dispatch values
+    int dispatchX = _NbGrassBlades;
+    int dispatchY = 1;
+    int dispatchZ = 1;
+
+    // Adjust dispatch values based on maximum work group counts
+    if (dispatchX > _MaxWorkGroupCountX) {
+        dispatchY = (dispatchX + _MaxWorkGroupCountX - 1) / _MaxWorkGroupCountX;
+        dispatchX = _MaxWorkGroupCountX;
+    }
+
+    if (dispatchY > _MaxWorkGroupCountY) {
+        dispatchZ = (dispatchY + _MaxWorkGroupCountY - 1) / _MaxWorkGroupCountY;
+        dispatchY = _MaxWorkGroupCountY;
+    }
+
+    if (dispatchZ > _MaxWorkGroupCountZ) {
+        fprintf(stderr, "Too many grass blades per tile !\n");
+        ErrorHandler::handle(GL_ERROR);
+    }
+
+    // Dispatch the compute shader
+    glDispatchCompute(dispatchX, dispatchY, dispatchZ);
+    // glDispatchCompute(_NbGrassBlades, 1, 1);
+    glMemoryBarrier(GL_ALL_BARRIER_BITS);
+    // printBuffers();
 }
 
 void GrassTile::updateRenderingBuffers(){
@@ -178,6 +203,9 @@ void GrassTile::render(Shaders* shaders){
 }
 
 GLuint GrassTile::_IdCounter = 1;
+GLint GrassTile::_MaxWorkGroupCountX = 0;
+GLint GrassTile::_MaxWorkGroupCountY = 0;
+GLint GrassTile::_MaxWorkGroupCountZ = 0;
 
 Grass::Grass(){
     glm::vec2 curPos = glm::vec2();
@@ -190,6 +218,11 @@ Grass::Grass(){
         _Tiles.push_back(new GrassTile(curPos));
         // std::cout << "tile id: " << _Tiles[_Tiles.size()-1]->_TileId << std::endl;
     }
+
+    // get max work group values
+    glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 0, &GrassTile::_MaxWorkGroupCountX);
+    glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 1, &GrassTile::_MaxWorkGroupCountY);
+    glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 2, &GrassTile::_MaxWorkGroupCountZ);
 }
 
 void Grass::render(Shaders* shaders){

@@ -1,7 +1,20 @@
 # Todo list
 
-- fix compute shader initialization (1 weird blade)
-- add lighting view
+
+## Bugs 
+
+- fix lighting
+
+
+## Major features
+
+- Terrain heightmap
+- Denser tiles
+- Better colors
+- Wind animation
+- Culling and optimizations
+
+## Minor features
 
 - add fps + tests with time spent on each function
 - add comments
