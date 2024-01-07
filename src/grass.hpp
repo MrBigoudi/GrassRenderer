@@ -151,12 +151,12 @@ class GrassTile{
 
 class Grass{
     private:
-        // GLuint _NbTiles = 1;
-        GLuint _NbTiles = 4;
-        GLuint _TileWidth = 16;
-        // GLuint _TileWidth = 4;
-        GLuint _TileHeight = 16;
-        // GLuint _TileHeight = 4;
+        GLuint _NbTiles = 1;
+        // GLuint _NbTiles = 4;
+        // GLuint _TileWidth = 16;
+        GLuint _TileWidth = 4;
+        // GLuint _TileHeight = 16;
+        GLuint _TileHeight = 4;
         GLuint _TileNbCols = 2;
         GLuint _TileNbLines = 2;
         float _RadiusHighLOD = 50.f;

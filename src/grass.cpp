@@ -103,7 +103,7 @@ void GrassTile::dispatchComputeShader(GLuint tileWidth, GLuint tileHeight){
     _ComputeShader->use();
     glBindVertexArray(_VAO);
 
-    _ComputeShader->setInt("nbGrassBlades", _NbGrassBlades);
+    // _ComputeShader->setInt("nbGrassBlades", _NbGrassBlades);
     _ComputeShader->setInt("tileWidth", tileWidth);
     _ComputeShader->setInt("tileHeight", tileHeight);
     _ComputeShader->setInt("gridNbCols", _GridNbCols);
@@ -194,7 +194,6 @@ void GrassTile::updateRenderingBuffers(){
 }
 
 void GrassTile::render(Shaders* shaders){
-    // updateRenderingBuffers();
     // Bind the vertex array object and draw
     glBindVertexArray(_VAO);
     shaders->use();
@@ -212,7 +211,7 @@ Grass::Grass(){
     _Material = MaterialPointer(new Material());
     for(GLuint i = 0; i<_NbTiles; i++){
         curPos.x = (i % _TileNbCols) * _TileWidth;
-        curPos.y = (i / _TileNbLines) * _TileHeight;
+        curPos.y = int(i / _TileNbLines) * _TileHeight;
         // GrassLOD lod = i == 0 ? GRASS_HIGH_LOD : GRASS_LOW_LOD;
         // GrassLOD lod = GRASS_HIGH_LOD;
         _Tiles.push_back(new GrassTile(curPos));

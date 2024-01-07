@@ -125,7 +125,6 @@ void Application::run(){
         glm::mat4 view = _Camera->getView();
         _Shaders->setMat4f("view", view);
         // _Shaders->setVec3f("camPos", _Camera->getPosition());
-        // _Shaders->setVec3f("camAt", _Camera->getAt());
 
         _Axis->setMatrices(view, projection);
         // end of test

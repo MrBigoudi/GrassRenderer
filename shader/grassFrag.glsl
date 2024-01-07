@@ -36,8 +36,8 @@ vec3 getNormal(){
     vec3 norm    = normalize(geomFragNormal);
     vec3 viewDir = normalize(camPos - geomFragPos);
 
-    // if(gl_FrontFacing)
-        // norm = -norm;
+    if(!gl_FrontFacing)
+        norm = -norm;
 
     return norm;
 }

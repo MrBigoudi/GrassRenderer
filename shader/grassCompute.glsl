@@ -35,7 +35,6 @@ layout(binding = 6, std430) buffer BendBuffer {
 
 
 // Uniform variables
-uniform int nbGrassBlades;
 uniform int tileWidth;
 uniform int tileHeight;
 uniform int gridNbCols;
@@ -48,7 +47,8 @@ const float MAX_WIDTH = 0.05f;
 const float MIN_WIDTH = 0.02f;
 const float MAX_HEIGHT = 0.5f; 
 const float MIN_HEIGHT = 0.3f;
-const float MAX_GREEN = 0.7f;
+
+const float MAX_GREEN = 1.5f;
 const float MIN_GREEN = 0.5f;
 
 
@@ -65,8 +65,8 @@ float rand(vec2 co, float mini, float maxi){
 
 // return the id of the grid cell given a position
 uint getGridCell(vec2 position){
-    float cellWidth = tileWidth / gridNbCols;
-    float cellHeight = tileHeight / gridNbLines;
+    float cellWidth = (1.f*tileWidth) / gridNbCols;
+    float cellHeight = (1.f*tileHeight) / gridNbLines;
 
     uint cellX = uint(position.x / cellWidth);
     uint cellY = uint(position.y / cellHeight);
@@ -181,7 +181,7 @@ uint findNearestNeighbour(vec3 bladePosition, uint nbIntersections, vec2 voronoi
 // Main functions
 
 // give a random position in the tile for the blade
-vec4 getRandomPosition(uint id){
+vec4 getRandomPosition(int id){
     vec4 newPos = vec4(0.f, 0.f, 0.f, 1.f);
 
     float randX = rand(vec2(id, tileID));
@@ -206,7 +206,7 @@ uint getClumpId(vec3 bladePosition){
     // find nearest of them
     uint nearestId = findNearestNeighbour(bladePosition, nbIntersections, voronoiPositions);
     // return the clump id
-    return intersections[nearestId] + tileID * nbGrassBlades;
+    return intersections[nearestId];
 }
 
 vec2 getBend(uint id, uint clumpId, float height, float tilt){
@@ -222,10 +222,12 @@ vec2 getBend(uint id, uint clumpId, float height, float tilt){
 }
 
 vec4 getColor(uint clumpId){
+    float green = rand(vec2(clumpId, clumpId), MIN_GREEN, MAX_GREEN);
+
     return vec4(
-        0.f,
-        rand(vec2(clumpId, clumpId), MIN_GREEN, MAX_GREEN),
-        0.f,
+        0.05f,
+        0.2f * green,
+        0.01f,
         1.f
     );
 }

@@ -86,3 +86,13 @@ instead of
 - `position blade 3 = (3, 0 ,0)
 
 resulting in a lot of blades being at position `(0,0,0)` and with a black color `(0,0,0)`.
+
+## Step 10 better colors and lighting
+
+The blades still look a bit boring. To make things more realistic, we will change how the blade colors are generated.
+
+- First for the blade color, we use a gradient to make colors vary from a dark green color at the bottom to a yellowish color at the tip.
+![gradient colors](report/bladesGradients.png)
+
+TODO: fix lighting system
+

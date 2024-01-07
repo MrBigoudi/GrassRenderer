@@ -49,7 +49,8 @@ class Camera{
             float fov = 45.f,
             float near = 0.1f,
             float far = 100.f,
-            const glm::vec3& position = glm::vec3(12.f, 1.f, 12.0f),
+            const glm::vec3& position = glm::vec3(1.f, 0.f, 1.f),
+            // const glm::vec3& position = glm::vec3(12.f, 1.f, 12.0f),
             const glm::vec3& worldUp = glm::vec3(0.f, 1.f, 0.f)
         ){
             _AspectRatio = aspectRatio;

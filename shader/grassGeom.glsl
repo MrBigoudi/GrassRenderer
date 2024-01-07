@@ -14,6 +14,8 @@ const int NB_VERT_HIGH_LOD = 15;
 const int NB_VERT_LOW_LOD = 7;
 const int NB_QUAD_HIGH_LOD = 6;
 const int NB_QUAD_LOW_LOD = 2;
+const vec3 TIP_COLOR = vec3(0.5f, 0.5f, 0.1f);
+
 
 const vec4 red = vec4(1.f, 0.f, 0.f, 1.f);
 const float PI = 3.1416f;
@@ -50,9 +52,14 @@ vec2 quadraticBezierCurveDerivative(float t, vec2 P0, vec2 P1, vec2 P2){
     return -2.f*(1.f-t)*P0 + 2.f*P1*(1.f-2.f*t) + 2.f*t*P2;
 }
 
-void getVerticesPositionsAndNormals(vec3 pos, float width, float height, float tilt, vec2 bend,
+vec3 getColor(vec3 color, float maxHeight, float curHeight){
+    return mix(color, TIP_COLOR, (curHeight / maxHeight));
+}
+
+void getVerticesPositionsAndNormals(vec3 pos, float width, float height, float tilt, vec2 bend, vec3 color,
     out vec3 positions[NB_VERT_HIGH_LOD],
-    out vec3 normals[NB_VERT_HIGH_LOD]
+    out vec3 normals[NB_VERT_HIGH_LOD],
+    out vec3 colors[NB_VERT_HIGH_LOD]
     ){
     int nbVert = tileLOD == HIGH_LOD ? NB_VERT_HIGH_LOD : NB_VERT_LOW_LOD;
 
@@ -71,6 +78,8 @@ void getVerticesPositionsAndNormals(vec3 pos, float width, float height, float t
         vec2 bendAndTilt = quadraticBezierCurve(t, P0, P1, P2);
         positions[i] = pos + vec3(bendAndTilt.x, bendAndTilt.y, -curWidth);
         positions[i+1] = pos + vec3(bendAndTilt.x, bendAndTilt.y, curWidth);
+        colors[i] = getColor(color, height, bendAndTilt.y);
+        colors[i+1] = getColor(color, height, bendAndTilt.y);
         curWidth -= widthDelta;
 
         vec2 bezierDerivative = quadraticBezierCurveDerivative(t, P0, P1, P2);
@@ -87,6 +96,7 @@ void getVerticesPositionsAndNormals(vec3 pos, float width, float height, float t
     vec2 bezierDerivative = quadraticBezierCurveDerivative(1.f, P0, P1, P2);
     vec3 bezierNormal = normalize(vec3(bezierDerivative.x, bezierDerivative.y, 0.f));
     normals[nbVert-1] = cross(bezierNormal, widthTangent);
+    colors[nbVert-1] = TIP_COLOR;
 }
 
 vec3 getModelPos(vec3 center, vec3 position, float rotation){
@@ -111,7 +121,10 @@ vec3 getRotatedNormals(vec3 normal, float rotation){
     return normalize(getRotationMatrix(rotation) * normal);
 }
 
-void createTriangle(vec3 center, vec3 positions[NB_VERT_HIGH_LOD], vec3 normals[NB_VERT_HIGH_LOD], 
+void createTriangle(vec3 center, 
+    vec3 positions[NB_VERT_HIGH_LOD], 
+    vec3 normals[NB_VERT_HIGH_LOD], 
+    vec3 colors[NB_VERT_HIGH_LOD],
     float rotation, vec3 color, int indices[3]){
     int idx = 0;
     for(int i=0; i<3; i++){
@@ -119,7 +132,7 @@ void createTriangle(vec3 center, vec3 positions[NB_VERT_HIGH_LOD], vec3 normals[
         vec3 modelPos = getModelPos(center, positions, idx, rotation);
         vec4 worldPos = getWorldPos(center, positions, idx, rotation);
         vec3 normal = getRotatedNormals(normals[idx], rotation);
-        geomFragCol = color;
+        geomFragCol = colors[idx];
         geomFragNormal = normal;
         geomFragPos = modelPos;
         gl_Position = worldPos;
@@ -130,7 +143,8 @@ void createTriangle(vec3 center, vec3 positions[NB_VERT_HIGH_LOD], vec3 normals[
 
 void createTriangles(vec3 center, float rotation, vec3 color,
     vec3 positions[NB_VERT_HIGH_LOD], 
-    vec3 normals[NB_VERT_HIGH_LOD]
+    vec3 normals[NB_VERT_HIGH_LOD],
+    vec3 colors[NB_VERT_HIGH_LOD]
     ){
     int nbQuads = tileLOD == HIGH_LOD ? NB_QUAD_HIGH_LOD : NB_QUAD_LOW_LOD;
     int nbVert = tileLOD == HIGH_LOD ? NB_VERT_HIGH_LOD : NB_VERT_LOW_LOD;
@@ -142,13 +156,13 @@ void createTriangles(vec3 center, float rotation, vec3 color,
         indices[0] = vertCounter;
         indices[1] = vertCounter+1;
         indices[2] = vertCounter+2;
-        createTriangle(center, positions, normals, rotation, color, indices);
+        createTriangle(center, positions, normals, colors, rotation, color, indices);
 
         // second triangle
         indices[0] = vertCounter+2;
         indices[1] = vertCounter+1;
         indices[2] = vertCounter+3;
-        createTriangle(center, positions, normals, rotation, color, indices);
+        createTriangle(center, positions, normals, colors, rotation, color, indices);
 
         vertCounter += 2;
     }
@@ -156,7 +170,7 @@ void createTriangles(vec3 center, float rotation, vec3 color,
     indices[0] = nbVert-3;
     indices[1] = nbVert-2;
     indices[2] = nbVert-1;
-    createTriangle(center, positions, normals, rotation, color, indices);
+    createTriangle(center, positions, normals, colors, rotation, color, indices);
 }
 
 vec3 getAvgNormal(float tilt, float height){
@@ -190,7 +204,8 @@ void main(){
 
     vec3 positions[NB_VERT_HIGH_LOD];
     vec3 normals[NB_VERT_HIGH_LOD];
-    getVerticesPositionsAndNormals(pos, width, height, tilt, bend, positions, normals);
-    createTriangles(pos, rotation, color, positions, normals);
+    vec3 colors[NB_VERT_HIGH_LOD];
+    getVerticesPositionsAndNormals(pos, width, height, tilt, bend, color, positions, normals, colors);
+    createTriangles(pos, rotation, color, positions, normals, colors);
 
 }
