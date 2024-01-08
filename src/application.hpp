@@ -25,9 +25,9 @@ class Application{
         Grass* _Grass = nullptr;
         Axis* _Axis = nullptr;
 
-        float _CurrentFrameTime = 0.0f;
-        float _LastFrameTime = 0.0f;
-        float _DeltaTime = 0.0f;
+        float _CurrentFrameTime = 0.f;
+        float _LastFrameTime = 0.f;
+        float _DeltaTime = 0.f;
 
         bool _FirstMouse = true;
         double _LastMouseX;

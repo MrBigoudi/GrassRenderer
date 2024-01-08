@@ -38,10 +38,12 @@ class GrassTile{
     private:
         static GLuint _IdCounter;
         static GLint _MaxWorkGroupCountX, _MaxWorkGroupCountY, _MaxWorkGroupCountZ;
+        const static GLuint _NB_GRASS_BLADES_HIGH_LOD = 4096;
+        const static GLuint _NB_GRASS_BLADES_LOW_LOD = 1024;
 
     private:
         // GLuint _NbGrassBlades = 10;
-        GLuint _NbGrassBlades = 2048;
+        GLuint _NbGrassBlades = _NB_GRASS_BLADES_HIGH_LOD;
         // GLuint _NbGrassBlades = 2 << 20;
         GLuint _GridNbCols = 16;
         GLuint _GridNbLines = 16;
@@ -135,9 +137,16 @@ class GrassTile{
                 const std::string& shaderPath = "shader/grassCompute.glsl");
         
         void dispatchComputeShader(GLuint tileWidth, GLuint tileHeight);
-        void render(Shaders* shaders);
+        void render(Shaders* shaders, float time);
         void setLOD(GrassLOD newLOD){
             _LOD = newLOD;
+            switch (_LOD) {
+                case GRASS_HIGH_LOD:
+                    _NbGrassBlades = _NB_GRASS_BLADES_HIGH_LOD;
+                    break;
+                case GRASS_LOW_LOD:
+                    _NbGrassBlades = _NB_GRASS_BLADES_LOW_LOD;
+            }
         }
         glm::vec3 getPos(){
             glm::vec3 tmp;
@@ -151,18 +160,17 @@ class GrassTile{
 
 class Grass{
     private:
-        GLuint _NbTiles = 1;
-        // GLuint _NbTiles = 4;
+        // GLuint _NbTileLength = 20;
+        GLuint _NbTileLength = 1;
         // GLuint _TileWidth = 16;
         GLuint _TileWidth = 4;
         // GLuint _TileHeight = 16;
         GLuint _TileHeight = 4;
-        GLuint _TileNbCols = 2;
-        GLuint _TileNbLines = 2;
-        float _RadiusHighLOD = 50.f;
+        float _RadiusHighLOD = 25.f;
 
         MaterialPointer _Material = nullptr;
         std::vector<GrassTile*> _Tiles;
+        float _TotalTime = 0.f;
 
     public:
         Grass();

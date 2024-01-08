@@ -193,11 +193,13 @@ void GrassTile::updateRenderingBuffers(){
     }
 }
 
-void GrassTile::render(Shaders* shaders){
+void GrassTile::render(Shaders* shaders, float time){
     // Bind the vertex array object and draw
     glBindVertexArray(_VAO);
     shaders->use();
     shaders->setInt("tileLOD", _LOD);
+    shaders->setFloat("time", time);
+    // glDrawArraysInstanced(GL_POINTS, 0, 1, _NbGrassBlades);
     glDrawArrays(GL_POINTS, 0, _NbGrassBlades);
 }
 
@@ -209,13 +211,20 @@ GLint GrassTile::_MaxWorkGroupCountZ = 0;
 Grass::Grass(){
     glm::vec2 curPos = glm::vec2();
     _Material = MaterialPointer(new Material());
-    for(GLuint i = 0; i<_NbTiles; i++){
-        curPos.x = (i % _TileNbCols) * _TileWidth;
-        curPos.y = int(i / _TileNbLines) * _TileHeight;
-        // GrassLOD lod = i == 0 ? GRASS_HIGH_LOD : GRASS_LOW_LOD;
-        // GrassLOD lod = GRASS_HIGH_LOD;
+    GLuint nbTiles = _NbTileLength*_NbTileLength;
+
+    float totalWidth = _NbTileLength * _TileWidth;
+    curPos.x = 0.f;
+    curPos.y = -1.f * _TileHeight;
+    for(GLuint i = 0; i < nbTiles; i++){
+        bool endOfLine = (i % _NbTileLength == 0);
+        curPos.x += 1.f * _TileWidth;
+        if (endOfLine) {
+            curPos.x = 0.f;
+            curPos.y += 1.f * _TileHeight;
+        }
+        // std::cout << "pos: " << curPos.x << ", " << curPos.y << std::endl;
         _Tiles.push_back(new GrassTile(curPos));
-        // std::cout << "tile id: " << _Tiles[_Tiles.size()-1]->_TileId << std::endl;
     }
 
     // get max work group values
@@ -228,11 +237,12 @@ void Grass::render(Shaders* shaders){
     // _Material->setShaderValues(shaders);
     for(auto& tile : _Tiles){
         tile->dispatchComputeShader(_TileWidth, _TileHeight);
-        tile->render(shaders);
+        tile->render(shaders, _TotalTime);
     }
 }
 
 void Grass::update(float dt, const glm::vec3& cameraPosition){
+    _TotalTime += dt;
     // update tiles lod
     for(auto& tile : _Tiles){
         // get tile's position

@@ -7,16 +7,17 @@ layout (triangle_strip, max_vertices = 45) out;
 uniform mat4 view;
 uniform mat4 proj;
 uniform int tileLOD;
+uniform float time;
 
 const int HIGH_LOD = 1;
-const int LOW_LOD = 2;
 const int NB_VERT_HIGH_LOD = 15;
-const int NB_VERT_LOW_LOD = 7;
 const int NB_QUAD_HIGH_LOD = 6;
-const int NB_QUAD_LOW_LOD = 2;
+
+const int LOW_LOD = 2;
+const int NB_VERT_LOW_LOD = 3;
+const int NB_QUAD_LOW_LOD = 0;
+
 const vec3 TIP_COLOR = vec3(0.5f, 0.5f, 0.1f);
-
-
 const vec4 red = vec4(1.f, 0.f, 0.f, 1.f);
 const float PI = 3.1416f;
 
@@ -37,6 +38,56 @@ out vec3 geomFragPos;
 uniform vec3 camPos;
 uniform vec3 camAt;
 
+const int perlinNoiseGridSize = 4;
+vec2 perlinNoiseGrid[perlinNoiseGridSize*perlinNoiseGridSize];
+
+float pseudoRandom(int id){
+    vec2 seed = vec2(id, id);
+    return fract(sin(dot(seed ,vec2(12.9898,78.233))) * 43758.5453);
+}
+
+vec2 getPerlinNoiseGradient(int u, int v){
+    int id = u + v*perlinNoiseGridSize;
+    float theta = pseudoRandom(id);
+    return vec2(cos(theta), sin(theta));
+}
+
+float blending(float t){
+    return 6.f*t*t*t*t*t - 15.f*t*t*t*t + 10.f*t*t*t;
+}
+
+float perlin(vec2 pos, float t){
+    float x = pos.x;
+    float y = pos.y;
+    int i = int(floor(x));
+    int j = int(floor(y));
+
+    vec2 g00 = getPerlinNoiseGradient(i, j);
+    vec2 g10 = getPerlinNoiseGradient(i+1, j);
+    vec2 g01 = getPerlinNoiseGradient(i, j+1);
+    vec2 g11 = getPerlinNoiseGradient(i+1, j+1);
+
+    float u = x-i;
+    float v = y-i;
+
+    float n00 = dot(g00, vec2(u,v));
+    float n10 = dot(g10, vec2(u-1.f,v));
+    float n01 = dot(g01, vec2(u,v-1.f));
+    float n11 = dot(g11, vec2(u-1.f,v-1.f));
+
+    float nx0 = n00*(1-blending(u)) + n10*blending(u);
+    float nx1 = n01*(1-blending(u)) + n11*blending(u);
+    float nxy = nx0*(1-blending(v)) + nx1*blending(v);
+
+    return cos(t) + nxy;
+}
+
+float infinitePerlin(vec2 pos){
+    // vec2 wrappedP = mod(pos, perlinNoiseGridSize);
+    vec2 wrappedP = mod(pos, perlinNoiseGridSize);
+    return perlin(wrappedP, time);
+}
+
 mat3 getRotationMatrix(float rotation){
     return mat3(cos(rotation), 0.f, sin(rotation),
                 0.f, 1.f, 0.f,
@@ -53,7 +104,7 @@ vec2 quadraticBezierCurveDerivative(float t, vec2 P0, vec2 P1, vec2 P2){
 }
 
 vec3 getColor(vec3 color, float maxHeight, float curHeight){
-    return mix(color, TIP_COLOR, (curHeight / maxHeight));
+    return mix(color, TIP_COLOR, (curHeight / maxHeight) * 0.8f);
 }
 
 void getVerticesPositionsAndNormals(vec3 pos, float width, float height, float tilt, vec2 bend, vec3 color,
@@ -67,9 +118,12 @@ void getVerticesPositionsAndNormals(vec3 pos, float width, float height, float t
     float widthDelta = minWidth / nbVert;
     float curWidth = width / 2.f;
 
+    float noise = infinitePerlin(pos.xz);
+
     vec2 P0 = vec2(0.f);
     vec2 P1 = bend;
     vec2 P2 = vec2(tilt, height);
+    // vec2 P2 = vec2(tilt, height) + vec2(0.1f, 0.3f) * noise;
 
     vec3 widthTangent = vec3(0.f, 0.f, 1.f);
 
@@ -78,8 +132,10 @@ void getVerticesPositionsAndNormals(vec3 pos, float width, float height, float t
         vec2 bendAndTilt = quadraticBezierCurve(t, P0, P1, P2);
         positions[i] = pos + vec3(bendAndTilt.x, bendAndTilt.y, -curWidth);
         positions[i+1] = pos + vec3(bendAndTilt.x, bendAndTilt.y, curWidth);
-        colors[i] = getColor(color, height, bendAndTilt.y);
-        colors[i+1] = getColor(color, height, bendAndTilt.y);
+        // colors[i] = getColor(color, height, bendAndTilt.y);
+        // colors[i+1] = getColor(color, height, bendAndTilt.y);
+        colors[i] = noise*vec3(1.f,1.f,1.f);
+        colors[i+1] = noise*vec3(1.f,1.f,1.f);
         curWidth -= widthDelta;
 
         vec2 bezierDerivative = quadraticBezierCurveDerivative(t, P0, P1, P2);
@@ -92,11 +148,13 @@ void getVerticesPositionsAndNormals(vec3 pos, float width, float height, float t
         normals[i+1] = normalize(getRotationMatrix(PI * (-0.3f)) * normal);
     }
 
-    positions[nbVert-1] = pos + vec3(P2, 0.f);
+    vec3 newPos = pos + vec3(P2, 0.f);
+    positions[nbVert-1] = newPos;
     vec2 bezierDerivative = quadraticBezierCurveDerivative(1.f, P0, P1, P2);
     vec3 bezierNormal = normalize(vec3(bezierDerivative.x, bezierDerivative.y, 0.f));
     normals[nbVert-1] = cross(bezierNormal, widthTangent);
     colors[nbVert-1] = TIP_COLOR;
+    colors[nbVert-1] = noise*vec3(1.f,1.f,1.f);
 }
 
 vec3 getModelPos(vec3 center, vec3 position, float rotation){

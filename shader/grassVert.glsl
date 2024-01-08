@@ -41,11 +41,13 @@ out VertexData{
 
 
 void main() {
-    vertexData._Position = iPosition[gl_VertexID];
-    vertexData._Height = iHeight[gl_VertexID];
-    vertexData._Width = iWidth[gl_VertexID];
-    vertexData._Color = iColor[gl_VertexID];
-    vertexData._Rotation = iRotation[gl_VertexID];
-    vertexData._Tilt = iTilt[gl_VertexID];
-    vertexData._Bend = iBend[gl_VertexID];
+    // int id = gl_InstanceID;
+    int id = gl_VertexID;
+    vertexData._Position = iPosition[id];
+    vertexData._Height = iHeight[id];
+    vertexData._Width = iWidth[id];
+    vertexData._Color = iColor[id];
+    vertexData._Rotation = iRotation[id];
+    vertexData._Tilt = iTilt[id];
+    vertexData._Bend = iBend[id];
 }
