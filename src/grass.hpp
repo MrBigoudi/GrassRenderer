@@ -161,7 +161,7 @@ class GrassTile{
 class Grass{
     private:
         // GLuint _NbTileLength = 20;
-        GLuint _NbTileLength = 1;
+        GLuint _NbTileLength = 4;
         // GLuint _TileWidth = 16;
         GLuint _TileWidth = 4;
         // GLuint _TileHeight = 16;
