@@ -137,7 +137,7 @@ class GrassTile{
                 const std::string& shaderPath = "shader/grassCompute.glsl");
         
         void dispatchComputeShader(GLuint tileWidth, GLuint tileHeight);
-        void render(Shaders* shaders, float time);
+        void render(Shaders* shaders, float time, GLuint tileWidth, GLuint tileHeight);
         void setLOD(GrassLOD newLOD){
             _LOD = newLOD;
             switch (_LOD) {
@@ -161,7 +161,7 @@ class GrassTile{
 class Grass{
     private:
         // GLuint _NbTileLength = 20;
-        GLuint _NbTileLength = 4;
+        GLuint _NbTileLength = 1;
         // GLuint _TileWidth = 16;
         GLuint _TileWidth = 4;
         // GLuint _TileHeight = 16;

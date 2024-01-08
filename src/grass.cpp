@@ -193,12 +193,14 @@ void GrassTile::updateRenderingBuffers(){
     }
 }
 
-void GrassTile::render(Shaders* shaders, float time){
+void GrassTile::render(Shaders* shaders, float time, GLuint tileWidth, GLuint tileHeight){
     // Bind the vertex array object and draw
     glBindVertexArray(_VAO);
     shaders->use();
     shaders->setInt("tileLOD", _LOD);
     shaders->setFloat("time", time);
+    shaders->setInt("tileWidth", tileWidth);
+    shaders->setInt("tileHeight", tileHeight);
     // glDrawArraysInstanced(GL_POINTS, 0, 1, _NbGrassBlades);
     glDrawArrays(GL_POINTS, 0, _NbGrassBlades);
 }
@@ -237,7 +239,7 @@ void Grass::render(Shaders* shaders){
     // _Material->setShaderValues(shaders);
     for(auto& tile : _Tiles){
         tile->dispatchComputeShader(_TileWidth, _TileHeight);
-        tile->render(shaders, _TotalTime);
+        tile->render(shaders, _TotalTime, _TileWidth, _TileHeight);
     }
 }
 

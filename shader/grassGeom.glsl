@@ -37,38 +37,64 @@ out vec3 geomFragPos;
 
 uniform vec3 camPos;
 uniform vec3 camAt;
+uniform int tileWidth;
+uniform int tileHeight;
 
 const int perlinNoiseGridSize = 4;
-vec2 perlinNoiseGrid[perlinNoiseGridSize*perlinNoiseGridSize];
-
-float pseudoRandom(int id){
-    vec2 seed = vec2(id, id);
-    return fract(sin(dot(seed ,vec2(12.9898,78.233))) * 43758.5453);
-}
+vec2 perlinNoiseGrid[perlinNoiseGridSize*perlinNoiseGridSize] = {
+    vec2(0.771012, 0.636019),
+    vec2(0.160682, 0.987007),
+    vec2(0.359264, 0.933235),
+    vec2(0.880301, 0.474678),
+    vec2(0.678273, 0.734603),
+    vec2(0.205294, 0.978705),
+    vec2(0.838856, 0.544077),
+    vec2(0.949798, 0.312973),
+    vec2(0.594761, 0.803876),
+    vec2(0.712568, 0.701568),
+    vec2(0.436498, 0.899715),
+    vec2(0.999037, 0.044264),
+    vec2(0.520423, 0.853941),
+    vec2(0.432170, 0.901753),
+    vec2(0.963676, 0.266713),
+    vec2(0.781059, 0.624056)
+};
 
 vec2 getPerlinNoiseGradient(int u, int v){
     int id = u + v*perlinNoiseGridSize;
-    float theta = pseudoRandom(id);
-    return vec2(cos(theta), sin(theta));
+    return perlinNoiseGrid[id];
+}
+
+vec2 getGridCell(vec2 pos, float cellWidth, float cellHeight){
+    int cellX = int(pos.x / cellWidth);
+    int cellY = int(pos.y / cellHeight);
+
+    return vec2(cellX, cellY);
 }
 
 float blending(float t){
     return 6.f*t*t*t*t*t - 15.f*t*t*t*t + 10.f*t*t*t;
 }
 
-float perlin(vec2 pos, float t){
+float perlin(vec2 pos){
+    float cellWidth = (1.f*tileWidth) / perlinNoiseGridSize;
+    float cellHeight = (1.f*tileHeight) / perlinNoiseGridSize;
+
+    vec2 ij = getGridCell(pos, cellWidth, cellHeight);
+
     float x = pos.x;
     float y = pos.y;
-    int i = int(floor(x));
-    int j = int(floor(y));
+
+    int i = int(ij.x);
+    int j = int(ij.y);
 
     vec2 g00 = getPerlinNoiseGradient(i, j);
     vec2 g10 = getPerlinNoiseGradient(i+1, j);
     vec2 g01 = getPerlinNoiseGradient(i, j+1);
     vec2 g11 = getPerlinNoiseGradient(i+1, j+1);
 
-    float u = x-i;
-    float v = y-i;
+    float u = x-i*cellWidth;
+    float v = y-i*cellHeight;
 
     float n00 = dot(g00, vec2(u,v));
     float n10 = dot(g10, vec2(u-1.f,v));
@@ -79,13 +105,13 @@ float perlin(vec2 pos, float t){
     float nx1 = n01*(1-blending(u)) + n11*blending(u);
     float nxy = nx0*(1-blending(v)) + nx1*blending(v);
 
-    return cos(t) + nxy;
+    return nxy;
 }
 
 float infinitePerlin(vec2 pos){
     // vec2 wrappedP = mod(pos, perlinNoiseGridSize);
     vec2 wrappedP = mod(pos, perlinNoiseGridSize);
-    return perlin(wrappedP, time);
+    return perlin(wrappedP + vec2(time * 0.35f));
 }
 
 mat3 getRotationMatrix(float rotation){
