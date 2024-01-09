@@ -68,8 +68,8 @@ uint getGridCell(vec2 position){
     float cellWidth = (1.f*tileWidth) / gridNbCols;
     float cellHeight = (1.f*tileHeight) / gridNbLines;
 
-    uint cellX = uint(position.x / cellWidth);
-    uint cellY = uint(position.y / cellHeight);
+    uint cellX = uint(floor(position.x / cellWidth));
+    uint cellY = uint(floor(position.y / cellHeight));
 
     return cellX + cellY * gridNbCols;
 }
@@ -143,8 +143,8 @@ uint getClosestIntersections(vec3 bladePosition, out uint resultIds[9]){
 }
 
 vec2 getIntersectionPosition(uint cellId){
-    float randX = rand(vec2(cellId, 0.f));
-    float randZ = rand(vec2(0.f, cellId));
+    float randX = rand(vec2(cellId, tileID));
+    float randZ = rand(vec2(tileID, cellId));
 
     float cellX = cellId % gridNbCols;
     float cellZ = cellId / gridNbLines;
@@ -181,11 +181,11 @@ uint findNearestNeighbour(vec3 bladePosition, uint nbIntersections, vec2 voronoi
 // Main functions
 
 // give a random position in the tile for the blade
-vec4 getRandomPosition(int id){
+vec4 getRandomPosition(vec2 seed1, vec2 seed2){
     vec4 newPos = vec4(0.f, 0.f, 0.f, 1.f);
 
-    float randX = rand(vec2(id, tileID));
-    float randZ = rand(vec2(tileID, id));
+    float randX = rand(seed1);
+    float randZ = rand(seed2);
 
     newPos.x = randX * float(tileWidth);
     newPos.z = randZ * float(tileHeight);
@@ -209,20 +209,8 @@ uint getClumpId(vec3 bladePosition){
     return intersections[nearestId];
 }
 
-vec2 getBend(uint id, uint clumpId, float height, float tilt){
-    float maxX = tilt;
-    float minX = tilt / 3.f;
-    float randX = rand(vec2(id*tileID, clumpId+tileID), minX, maxX);
-
-    float maxY = height;
-    float minY = (height / tilt) * randX + height / 4.f;
-    float randY = rand(vec2(clumpId*tileID, id+tileID), minY, maxY);
-
-    return vec2(randX, randY);
-}
-
-vec4 getColor(uint clumpId){
-    float green = rand(vec2(clumpId, clumpId), MIN_GREEN, MAX_GREEN);
+vec4 getColor(vec2 seed){
+    float green = rand(seed, MIN_GREEN, MAX_GREEN);
 
     return vec4(
         0.05f,
@@ -232,12 +220,24 @@ vec4 getColor(uint clumpId){
     );
 }
 
-float getRotation(uint id){
-    return radians(rand(vec2(id*tileID, id+tileID)) * 360.f);
+float getRotation(vec2 seed){
+    return radians(rand(seed) * 360.f);
 }
 
-float getTilt(uint id, float height){
-    return rand(vec2(id, 0.f), height / 3.f, height);
+float getTilt(vec2 seed, float height){
+    return rand(seed, height / 3.f, height);
+}
+
+vec2 getBend(vec2 seed1, vec2 seed2, float height, float tilt){
+    float maxX = tilt;
+    float minX = tilt / 3.f;
+    float randX = rand(seed1, minX, maxX);
+
+    float maxY = height;
+    float minY = (height / tilt) * randX + height / 3.f;
+    float randY = rand(seed2, minY, maxY);
+
+    return vec2(randX, randY);
 }
 
 void main() {
@@ -246,15 +246,14 @@ void main() {
                         + int(globalID.y) * int(gl_NumWorkGroups.x);
                         + int(globalID.z) * int(gl_NumWorkGroups.x) * int(gl_NumWorkGroups.y);
     // Store data in buffers
-
-    vec4 position = getRandomPosition(instanceIndex);
+    vec4 position = getRandomPosition(vec2(instanceIndex, tileID), vec2(tileID, instanceIndex));
     uint clumpId = getClumpId(position.xyz);
-    float height = rand(vec2(instanceIndex, tileID), MIN_HEIGHT, MAX_HEIGHT);
-    float width = rand(vec2(tileID, instanceIndex), MIN_WIDTH, MAX_WIDTH);
-    vec4 color = getColor(clumpId);
-    float rotation = getRotation(instanceIndex);
-    float tilt = getTilt(clumpId, height);
-    vec2 bend = getBend(instanceIndex, clumpId, height, tilt);
+    float height = rand(position.xz, MIN_HEIGHT, MAX_HEIGHT);
+    float width = rand(position.xz, MIN_WIDTH, MAX_WIDTH);
+    vec4 color = getColor(vec2(clumpId, clumpId));
+    float rotation = getRotation(position.xz);
+    float tilt = getTilt(vec2(clumpId, position.x*position.z), height);
+    vec2 bend = getBend(vec2(clumpId, position.x), vec2(position.z, clumpId), height, tilt);
 
     // tmp
     // vec4 position = vec4(instanceIndex+1.f, 0.f, 0.f, 1.f);

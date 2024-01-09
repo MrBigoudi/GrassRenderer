@@ -199,8 +199,8 @@ void GrassTile::render(Shaders* shaders, float time, GLuint tileWidth, GLuint ti
     shaders->use();
     shaders->setInt("tileLOD", _LOD);
     shaders->setFloat("time", time);
-    shaders->setInt("tileWidth", tileWidth);
-    shaders->setInt("tileHeight", tileHeight);
+    // shaders->setInt("tileWidth", tileWidth);
+    // shaders->setInt("tileHeight", tileHeight);
     // glDrawArraysInstanced(GL_POINTS, 0, 1, _NbGrassBlades);
     glDrawArrays(GL_POINTS, 0, _NbGrassBlades);
 }

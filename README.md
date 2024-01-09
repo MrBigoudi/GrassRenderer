@@ -96,3 +96,11 @@ The blades still look a bit boring. To make things more realistic, we will chang
 
 TODO: fix lighting system
 
+## Step 11 wind system
+
+To add more life to the scene, we implemented a wind system.
+
+- We first wanted to create a wind vector field using Perlin noise to add subtle movement to the grass blades. However, using gradient Perlin noise resulted in a really grid-like field. We can see that in the following figure where the output of the noise is used as a grayscale factor:
+![gradient perlin noise](report/gradientPerlinNoise.png)
+To fix this issue, we used a more complex Perlin noise called the simplex Perlin noise:
+![simplex perlin noise](report/simplexPerlinNoise.png)
