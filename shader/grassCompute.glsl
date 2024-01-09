@@ -56,7 +56,7 @@ const float MIN_GREEN = 0.5f;
 
 // generate random value given a vec2 seed
 float rand(vec2 co){
-    return fract(sin(dot(co ,vec2(12.9898,78.233))) * 43758.5453);
+    return fract(sin(dot(co ,vec2(12.9898f,78.233f))) * 43758.5453f);
 }
 float rand(vec2 co, float mini, float maxi){
     float random = rand(co);
@@ -184,8 +184,20 @@ uint findNearestNeighbour(vec3 bladePosition, uint nbIntersections, vec2 voronoi
 vec4 getRandomPosition(vec2 seed1, vec2 seed2){
     vec4 newPos = vec4(0.f, 0.f, 0.f, 1.f);
 
-    float randX = rand(seed1);
-    float randZ = rand(seed2);
+    float epsilon = 1e-4;
+    
+    float randX = 0.f;
+    float factor = 1.f;
+    while(randX < epsilon){
+        randX = rand(seed1*factor);
+        factor += 1.f;
+    }
+    float randZ = 0.f;
+    factor = 1.f;
+    while(randZ < epsilon){
+        randZ = rand(seed2*factor);
+        factor += 1.f;
+    }
 
     newPos.x = randX * float(tileWidth);
     newPos.z = randZ * float(tileHeight);
@@ -251,7 +263,7 @@ void main() {
     float height = rand(position.xz, MIN_HEIGHT, MAX_HEIGHT);
     float width = rand(position.xz, MIN_WIDTH, MAX_WIDTH);
     vec4 color = getColor(vec2(clumpId, clumpId));
-    float rotation = getRotation(position.xz);
+    float rotation = getRotation(vec2(position.x*position.z, clumpId));
     float tilt = getTilt(vec2(clumpId, position.x*position.z), height);
     vec2 bend = getBend(vec2(clumpId, position.x), vec2(position.z, clumpId), height, tilt);
 
