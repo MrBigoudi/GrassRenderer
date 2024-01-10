@@ -3,7 +3,9 @@
 #include "computeShader.hpp"
 #include "material.hpp"
 #include "shaders.hpp"
+#include "utils.hpp"
 #include <glad/gl.h>
+#include <glm/fwd.hpp>
 #include <glm/glm.hpp>
 #include <vector>
 
@@ -51,7 +53,10 @@ class GrassTile{
         // GLfloat _TileLength = 0.5f;
         GLuint _TileId = _IdCounter++;
         glm::vec2 _TilePos;
+        GLuint _TileHeight;
+        GLuint _TileWidth;
         GrassLOD _LOD; 
+        GLuint _RadiusRender = 30.f;
 
         // buffers compute shader
         GLuint _PositionBuffer;
@@ -133,12 +138,12 @@ class GrassTile{
         }
 
     public:
-        GrassTile(const glm::vec2& tilePos, 
+        GrassTile(const glm::vec2& tilePos, GLuint tileWidth, GLuint tileHeight,
                 GrassLOD tileLOD = GRASS_LOW_LOD,
                 const std::string& shaderPath = "shader/grassCompute.glsl");
         
-        void dispatchComputeShader(GLuint tileWidth, GLuint tileHeight);
-        void render(Shaders* shaders, float time, GLuint tileWidth, GLuint tileHeight);
+        void dispatchComputeShader();
+        void render(Shaders* shaders, float time);
         void setLOD(GrassLOD newLOD){
             _LOD = newLOD;
             switch (_LOD) {
@@ -156,6 +161,46 @@ class GrassTile{
             tmp.z = _TilePos.y;
             return tmp;
         }
+
+        bool shouldBeRendered(const glm::vec3& cameraPosition, const glm::mat4& view, const glm::mat4& proj){
+            // auto startTest = std::chrono::high_resolution_clock::now();
+            
+            std::vector<glm::vec4> corners = {
+                glm::vec4(_TilePos.x, 0.f, _TilePos.y, 1.f),
+                glm::vec4(_TilePos.x+_TileWidth, 0.f, _TilePos.y, 1.f),
+                glm::vec4(_TilePos.x, 0.f, _TilePos.y+_TileHeight, 1.f),
+                glm::vec4(_TilePos.x+_TileWidth, 0.f, _TilePos.y+_TileHeight, 1.f)
+            };
+
+            bool withinCircle = doCircleRectangleIntersect(
+                glm::vec3(cameraPosition.x, 0.f, cameraPosition.z), 
+                _RadiusRender,
+                glm::vec3(corners[0].x, 0.f, corners[0].z),
+                glm::vec3(corners[0].x, 0.f, corners[0].z),
+                glm::vec3(corners[0].x, 0.f, corners[0].z),
+                glm::vec3(corners[0].x, 0.f, corners[0].z)
+            );
+            if(!withinCircle) return false;
+
+            glm::mat4 mvp = proj*view;
+            glm::vec4 camPos = mvp*glm::vec4(cameraPosition.x, cameraPosition.y, cameraPosition.z, 1.f); 
+
+            // if all 4 corners are behind the camera projected on z = 0, don't render
+            bool behindCam = true;
+            for(int i=0; i<corners.size(); i++){
+                float z = (mvp*corners[i]).z;
+                if(z > 0.f){// in front
+                    behindCam = false;
+                    break;
+                }
+            }
+
+            // auto endTest = std::chrono::high_resolution_clock::now();
+            // displayTime(startTest, endTest, "test");
+
+            return !behindCam;
+            // return true;
+        }
 };
 
 
@@ -167,7 +212,7 @@ class Grass{
         GLuint _TileWidth = 4;
         // GLuint _TileHeight = 16;
         GLuint _TileHeight = 4;
-        float _RadiusHighLOD = 25.f;
+        float _RadiusHighLOD = 20.f;
 
         MaterialPointer _Material = nullptr;
         std::vector<GrassTile*> _Tiles;
@@ -175,6 +220,6 @@ class Grass{
 
     public:
         Grass();
-        void render(Shaders* shaders);
+        void render(Shaders* shaders, const glm::vec3& cameraPosition, const glm::mat4& view, const glm::mat4& proj);
         void update(float dt, const glm::vec3& cameraPosition);
 };

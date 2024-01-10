@@ -88,6 +88,7 @@ void GrassTile::initShader(const std::string& shaderPath){
 
 GrassTile::GrassTile(
     const glm::vec2& tilePos,
+    GLuint tileWidth, GLuint tileHeight,
     GrassLOD tileLOD, 
     const std::string& shaderPath){
     initBuffers();
@@ -95,17 +96,19 @@ GrassTile::GrassTile(
     updateRenderingBuffers();
     _TilePos = tilePos;
     _LOD = tileLOD;
+    _TileHeight = tileHeight;
+    _TileWidth = tileWidth;
 }
 
 
-void GrassTile::dispatchComputeShader(GLuint tileWidth, GLuint tileHeight){
+void GrassTile::dispatchComputeShader(){
     // Bind the compute shader program
     _ComputeShader->use();
     glBindVertexArray(_VAO);
 
     // _ComputeShader->setInt("nbGrassBlades", _NbGrassBlades);
-    _ComputeShader->setInt("tileWidth", tileWidth);
-    _ComputeShader->setInt("tileHeight", tileHeight);
+    _ComputeShader->setInt("tileWidth", _TileWidth);
+    _ComputeShader->setInt("tileHeight", _TileHeight);
     _ComputeShader->setInt("gridNbCols", _GridNbCols);
     _ComputeShader->setInt("gridNbLines", _GridNbLines);
     _ComputeShader->setVec2f("tilePos", _TilePos);
@@ -137,7 +140,8 @@ void GrassTile::dispatchComputeShader(GLuint tileWidth, GLuint tileHeight){
     // Dispatch the compute shader
     glDispatchCompute(dispatchX, dispatchY, dispatchZ);
     // glDispatchCompute(_NbGrassBlades, 1, 1);
-    glMemoryBarrier(GL_ALL_BARRIER_BITS);
+    // glMemoryBarrier(GL_ALL_BARRIER_BITS);
+    glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
     // printBuffers();
 }
 
@@ -193,7 +197,7 @@ void GrassTile::updateRenderingBuffers(){
     }
 }
 
-void GrassTile::render(Shaders* shaders, float time, GLuint tileWidth, GLuint tileHeight){
+void GrassTile::render(Shaders* shaders, float time){
     // Bind the vertex array object and draw
     glBindVertexArray(_VAO);
     shaders->use();
@@ -226,7 +230,7 @@ Grass::Grass(){
             curPos.y += 1.f * _TileHeight;
         }
         // std::cout << "pos: " << curPos.x << ", " << curPos.y << std::endl;
-        _Tiles.push_back(new GrassTile(curPos));
+        _Tiles.push_back(new GrassTile(curPos, _TileWidth, _TileHeight));
     }
 
     // get max work group values
@@ -235,12 +239,31 @@ Grass::Grass(){
     glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 2, &GrassTile::_MaxWorkGroupCountZ);
 }
 
-void Grass::render(Shaders* shaders){
+void Grass::render(Shaders* shaders, const glm::vec3& cameraPosition, const glm::mat4& view, const glm::mat4& proj){
+    shaders->setMat4f("proj", proj);
+    shaders->setMat4f("view", view);
+
     // _Material->setShaderValues(shaders);
+    // auto startLoop = std::chrono::high_resolution_clock::now();
     for(auto& tile : _Tiles){
-        tile->dispatchComputeShader(_TileWidth, _TileHeight);
-        tile->render(shaders, _TotalTime, _TileWidth, _TileHeight);
+        // auto startTest = std::chrono::high_resolution_clock::now();
+        if(tile->shouldBeRendered(cameraPosition, view, proj)){
+        // if(true){
+            // auto startDispatch = std::chrono::high_resolution_clock::now();
+            tile->dispatchComputeShader();
+            // auto endDispatch = std::chrono::high_resolution_clock::now();
+            // displayTime(startDispatch, endDispatch, "dispatch");
+
+            // auto startRender = std::chrono::high_resolution_clock::now();
+            tile->render(shaders, _TotalTime);
+            // auto endRender = std::chrono::high_resolution_clock::now();
+            // displayTime(startRender, endRender, "render");
+        }
+        // auto endTest = std::chrono::high_resolution_clock::now();
+        // displayTime(startTest, endTest, "test");
     }
+    // auto endLoop = std::chrono::high_resolution_clock::now();
+    // displayTime(startLoop, endLoop, "loop");
 }
 
 void Grass::update(float dt, const glm::vec3& cameraPosition){

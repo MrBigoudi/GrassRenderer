@@ -4,17 +4,16 @@
 ## Bugs 
 
 - fix lighting
+- when looking up should be 60 fps
 
 ## Major features
 
-- Better colors, gradient from bottom to tip + custom ambient
-- Wind animation with perlin noise suddle + real wind
+- Wind animation with strong wind
 - Terrain heightmap
 - Culling and optimizations
 
 ## Minor features
 
-- Denser tiles
 - add fps + tests with time spent on each function
 - add comments
 - add imgui with the input settings

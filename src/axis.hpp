@@ -8,9 +8,6 @@ class Axis{
     private:
         ShadersPointer _Shaders;
 
-        glm::mat4 _View;
-        glm::mat4 _Proj;
-
         float* _Data;
         GLuint _Vao;
 
@@ -46,20 +43,15 @@ class Axis{
             }
         }
 
-        void setMatrices(const glm::mat4& view, const glm::mat4& proj){
-            _Proj = proj;
-            _View = view;
-        }
-
-        void render(){
+        void render(const glm::mat4& view, const glm::mat4& proj){
             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
             
             glBindVertexArray(_Vao);
             glLineWidth(2.0f);
 
             _Shaders->use();
-            _Shaders->setMat4f("view", _View);
-            _Shaders->setMat4f("proj", _Proj);
+            _Shaders->setMat4f("view", view);
+            _Shaders->setMat4f("proj", proj);
 
             _Shaders->setVec4f("color", glm::vec4(1.0f, 0.0f, 0.0f, 1.0f));
             glDrawArrays(GL_LINE_STRIP, 0, 2);

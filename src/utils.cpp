@@ -1,4 +1,5 @@
 #include "utils.hpp"
+#include <iostream>
 #include <glm/geometric.hpp>
 
 bool doCircleRectangleIntersect(
@@ -20,4 +21,14 @@ bool doCircleRectangleIntersect(
     if(distRectCicrle > (rectHalfHeight + circleRadius)) return false;
 
     return true;
+}
+
+void displayTime(std::chrono::high_resolution_clock::time_point start,
+                std::chrono::high_resolution_clock::time_point end,
+                const std::string& msg){
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+    if(msg != "")
+        fprintf(stdout, "Time elapsed in %s: %ld microseconds\n", msg.c_str(), duration.count());
+    else
+        fprintf(stdout, "Time elapsed: %ld microseconds\n", duration.count());
 }

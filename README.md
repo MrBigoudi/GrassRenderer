@@ -104,3 +104,17 @@ To add more life to the scene, we implemented a wind system.
 ![gradient perlin noise](report/gradientPerlinNoise.png)
 To fix this issue, we used a more complex Perlin noise called the simplex Perlin noise:
 ![simplex perlin noise](report/simplexPerlinNoise.png)
+
+TODO: strong wind
+
+## Step 12 some optimizations
+
+At the moment, when having a lot of tiles we are getting some lags.
+
+- Since now, we were always sending the grass tiles info to both the compute shader and the graphics pipeline. A first optimization could be to only send tiles that are within a certain radius from the camera's position but also only the ones that are in front of the camera.
+
+- Another optimization is to also discard all the tiles that are outside a sphere of a certain radius around the camera.
+
+By doing these 2 optimizations, we can have arround 20 to 30 fps when having 20x20 tiles each filled with 4096 blades of grass using a laptop without a dedicated GPU.
+
+TODO: add fps viewer
