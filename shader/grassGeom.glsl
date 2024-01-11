@@ -304,10 +304,32 @@ float smooth_snoise(in vec3 v){
 float simplexPerlin(vec2 pos){
     float alpha = 0.05f;
     float beta = 0.65f;
-    float v1 = sin(pos.x + alpha*time);
-    float v2 = cos(pos.y - alpha*time);
+    float v1 = sin(pos.x);
+    float v2 = cos(pos.y);
     // return beta*snoise_abs(vec2(v1,v2), 5);
     return beta*snoise(vec2(v1,v2), 5);
+}
+
+float windField(vec2 uv, float dt) {
+    const float speed = 0.8f;  // Adjust the speed of the wind
+    const int octaves = 5;    // Adjust the number of octaves
+    const float persistence = .5f;  // Adjust the persistence of the noise
+    float scale = 1.f;  // Adjust the scale of the noise
+
+    vec2 flowDirection = normalize(vec2(1.0, 0.5));  // Adjust the main wind direction
+
+    vec2 movingUV = uv + flowDirection * dt * speed;
+    // generate wind field using multiple octaves of Simplex noise
+    float windFieldStrength = 0.f;
+    float amplitude = 1.f;
+
+    for (int i = 0; i < octaves; i++) {
+        windFieldStrength += amplitude * snoise(movingUV * scale, i);
+        scale /= 4.0f;  // Adjust the scale for each octave
+        amplitude *= persistence;  // Adjust the amplitude for each octave
+    }
+
+    return windFieldStrength;
 }
 
 
@@ -330,6 +352,26 @@ vec3 getColor(vec3 color, float maxHeight, float curHeight){
     return mix(color, TIP_COLOR, (curHeight / maxHeight) * 0.8f);
 }
 
+vec3 getAnimatedPos(vec3 basePos, float height, float noise){
+    // sine
+    // phase affected by per-blade hash + position along grass blade
+    float theta = noise;
+    float phase = pow(basePos.y,100) / height;
+    float yDelta = basePos.y == 0.f ? 0.f : 0.1f*sin(theta + phase);
+    float xDelta = basePos.y == 0.f ? 0.f : 0.1f*sin(theta + phase);
+
+    return vec3(basePos.x + xDelta, basePos.y + yDelta, basePos.z);
+}
+
+vec2 getAnimatedPos(vec2 basePos, float height, float noise){
+    float theta = noise;
+    float phase = basePos.y / height;
+    float yDelta = 0.1f*sin(theta + phase);
+    float xDelta = 0.4f*sin(theta + phase);
+
+    return vec2(basePos.x + xDelta, basePos.y + yDelta);
+}
+
 void getVerticesPositionsAndNormals(vec3 pos, float width, float height, float tilt, vec2 bend, vec3 color,
     out vec3 positions[NB_VERT_HIGH_LOD],
     out vec3 normals[NB_VERT_HIGH_LOD],
@@ -342,22 +384,30 @@ void getVerticesPositionsAndNormals(vec3 pos, float width, float height, float t
     float curWidth = width / 2.f;
 
     // float noise = infinitePerlin(pos.xz);
-    float noiseSubtle = simplexPerlin(pos.xz);
-    float noiseColor = noiseSubtle * 0.5f + 0.5f;
+    float noise = windField(pos.xz, time);
+    float noiseColor = windField(pos.xz, time);
 
-    vec2 deltaSubtle = vec2(0.1f*abs(noiseSubtle), 0.01f*noiseSubtle);
+    // vec2 deltaSubtle = vec2(0.1f*abs(noiseSubtle), 0.01f*noiseSubtle);
 
     vec2 P0 = vec2(0.f);
-    vec2 P1 = bend + deltaSubtle;
-    vec2 P2 = vec2(tilt, height) + deltaSubtle;
+    vec2 P1 = bend;
+    vec2 P2 = vec2(tilt, height);
+    // vec2 P1 = bend + deltaSubtle;
+    // vec2 P2 = vec2(tilt, height) + deltaSubtle;
+    // P1 = getAnimatedPos(P1, height, noise);
+    // P2 = getAnimatedPos(P2, height, noise);
 
     vec3 widthTangent = vec3(0.f, 0.f, 1.f);
 
     for(int i=0; i<nbVert-1; i+=2){
         float t = i / (1.f * nbVert);
         vec2 bendAndTilt = quadraticBezierCurve(t, P0, P1, P2);
-        positions[i] = pos + vec3(bendAndTilt.x, bendAndTilt.y, -curWidth);
-        positions[i+1] = pos + vec3(bendAndTilt.x, bendAndTilt.y, curWidth);
+        vec3 newPosLeft = pos + vec3(bendAndTilt.x, bendAndTilt.y, -curWidth);
+        vec3 newPosRight = pos + vec3(bendAndTilt.x, bendAndTilt.y, curWidth);
+        // positions[i] = newPosLeft;
+        // positions[i+1] = newPosRight;
+        positions[i] = getAnimatedPos(newPosLeft, height, noise);
+        positions[i+1] = getAnimatedPos(newPosRight, height, noise);
         colors[i] = getColor(color, height, bendAndTilt.y);
         colors[i+1] = getColor(color, height, bendAndTilt.y);
         // colors[i] = noiseColor*vec3(1.f,1.f,1.f);
@@ -375,7 +425,8 @@ void getVerticesPositionsAndNormals(vec3 pos, float width, float height, float t
     }
 
     vec3 newPos = pos + vec3(P2, 0.f);
-    positions[nbVert-1] = newPos;
+    // positions[nbVert-1] = newPos;
+    positions[nbVert-1] = getAnimatedPos(newPos, height, noise);
     vec2 bezierDerivative = quadraticBezierCurveDerivative(1.f, P0, P1, P2);
     vec3 bezierNormal = normalize(vec3(bezierDerivative.x, bezierDerivative.y, 0.f));
     normals[nbVert-1] = cross(bezierNormal, widthTangent);

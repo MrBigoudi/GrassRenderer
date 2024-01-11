@@ -103,7 +103,9 @@ To add more life to the scene, we implemented a wind system.
 - We first wanted to create a wind vector field using Perlin noise to add subtle movement to the grass blades. However, using gradient Perlin noise resulted in a really grid-like field. We can see that in the following figure where the output of the noise is used as a grayscale factor:
 ![gradient perlin noise](report/gradientPerlinNoise.png)
 To fix this issue, we used a more complex Perlin noise called the simplex Perlin noise:
-![simplex perlin noise](report/simplexPerlinNoise.png)
+![simplex perlin noise](report/simplexPerlinNoise.png). The wind is moved using a direction vector and a strength represented as a float.
+
+- To animate the blades of grass we use a sine function
 
 TODO: strong wind
 
