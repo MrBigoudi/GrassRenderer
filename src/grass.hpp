@@ -40,8 +40,8 @@ class GrassTile{
     private:
         static GLuint _IdCounter;
         static GLint _MaxWorkGroupCountX, _MaxWorkGroupCountY, _MaxWorkGroupCountZ;
-        // const static GLuint _NB_GRASS_BLADES_HIGH_LOD = 4096;
-        const static GLuint _NB_GRASS_BLADES_HIGH_LOD = 256;
+        const static GLuint _NB_GRASS_BLADES_HIGH_LOD = 4096;
+        // const static GLuint _NB_GRASS_BLADES_HIGH_LOD = 256;
         const static GLuint _NB_GRASS_BLADES_LOW_LOD = 1024;
 
     private:

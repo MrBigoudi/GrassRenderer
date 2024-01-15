@@ -356,20 +356,35 @@ vec3 getAnimatedPos(vec3 basePos, float height, float noise){
     // sine
     // phase affected by per-blade hash + position along grass blade
     float theta = noise;
-    float phase = pow(basePos.y,100) / height;
-    float yDelta = basePos.y == 0.f ? 0.f : 0.1f*sin(theta + phase);
-    float xDelta = basePos.y == 0.f ? 0.f : 0.1f*sin(theta + phase);
+    float phase = basePos.y / height;
+    float amplitude = .5f;
+
+    float yDelta = basePos.y == 0.f ? 0.f : amplitude*sin(theta + phase);
+    float xDelta = basePos.y == 0.f ? 0.f : amplitude*sin(theta + phase);
 
     return vec3(basePos.x + xDelta, basePos.y + yDelta, basePos.z);
 }
 
 vec2 getAnimatedPos(vec2 basePos, float height, float noise){
     float theta = noise;
-    float phase = basePos.y / height;
-    float yDelta = 0.1f*sin(theta + phase);
-    float xDelta = 0.4f*sin(theta + phase);
 
-    return vec2(basePos.x + xDelta, basePos.y + yDelta);
+    float phaseY = basePos.y / height;
+    float amplitudeY = 0.05f;
+    float frequencyY = 15.f * phaseY;
+
+    float yDelta = amplitudeY*sin(frequencyY*theta + phaseY);
+    // float yDelta = 0.f;
+    float newY = basePos.y + yDelta;
+
+    float phaseX = newY / height;
+    float amplitudeX = 0.1f;
+    float frequencyX = 5.f * phaseX;
+
+    float xDelta = amplitudeX*sin(frequencyX*theta + phaseX);
+    // float xDelta = 0.f;
+    float newX = basePos.x + xDelta;
+
+    return vec2(newX, newY);
 }
 
 void getVerticesPositionsAndNormals(vec3 pos, float width, float height, float tilt, vec2 bend, vec3 color,
@@ -394,8 +409,8 @@ void getVerticesPositionsAndNormals(vec3 pos, float width, float height, float t
     vec2 P2 = vec2(tilt, height);
     // vec2 P1 = bend + deltaSubtle;
     // vec2 P2 = vec2(tilt, height) + deltaSubtle;
-    // P1 = getAnimatedPos(P1, height, noise);
-    // P2 = getAnimatedPos(P2, height, noise);
+    P1 = getAnimatedPos(P1, height, noise);
+    P2 = getAnimatedPos(P2, height, noise);
 
     vec3 widthTangent = vec3(0.f, 0.f, 1.f);
 
@@ -404,10 +419,10 @@ void getVerticesPositionsAndNormals(vec3 pos, float width, float height, float t
         vec2 bendAndTilt = quadraticBezierCurve(t, P0, P1, P2);
         vec3 newPosLeft = pos + vec3(bendAndTilt.x, bendAndTilt.y, -curWidth);
         vec3 newPosRight = pos + vec3(bendAndTilt.x, bendAndTilt.y, curWidth);
-        // positions[i] = newPosLeft;
-        // positions[i+1] = newPosRight;
-        positions[i] = getAnimatedPos(newPosLeft, height, noise);
-        positions[i+1] = getAnimatedPos(newPosRight, height, noise);
+        positions[i] = newPosLeft;
+        positions[i+1] = newPosRight;
+        // positions[i] = getAnimatedPos(newPosLeft, height, noise);
+        // positions[i+1] = getAnimatedPos(newPosRight, height, noise);
         colors[i] = getColor(color, height, bendAndTilt.y);
         colors[i+1] = getColor(color, height, bendAndTilt.y);
         // colors[i] = noiseColor*vec3(1.f,1.f,1.f);
@@ -425,8 +440,8 @@ void getVerticesPositionsAndNormals(vec3 pos, float width, float height, float t
     }
 
     vec3 newPos = pos + vec3(P2, 0.f);
-    // positions[nbVert-1] = newPos;
-    positions[nbVert-1] = getAnimatedPos(newPos, height, noise);
+    positions[nbVert-1] = newPos;
+    // positions[nbVert-1] = getAnimatedPos(newPos, height, noise);
     vec2 bezierDerivative = quadraticBezierCurveDerivative(1.f, P0, P1, P2);
     vec3 bezierNormal = normalize(vec3(bezierDerivative.x, bezierDerivative.y, 0.f));
     normals[nbVert-1] = cross(bezierNormal, widthTangent);
