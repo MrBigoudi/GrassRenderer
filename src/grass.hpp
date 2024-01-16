@@ -162,7 +162,7 @@ class GrassTile{
             return tmp;
         }
 
-        bool shouldBeRendered(const glm::vec3& cameraPosition, const glm::mat4& view, const glm::mat4& proj){
+        bool shouldBeRendered(const glm::vec3& cameraPosition, const glm::mat4& mvp){
             // auto startTest = std::chrono::high_resolution_clock::now();
             
             std::vector<glm::vec4> corners = {
@@ -181,9 +181,6 @@ class GrassTile{
                 glm::vec3(corners[0].x, 0.f, corners[0].z)
             );
             if(!withinCircle) return false;
-
-            glm::mat4 mvp = proj*view;
-            glm::vec4 camPos = mvp*glm::vec4(cameraPosition.x, cameraPosition.y, cameraPosition.z, 1.f); 
 
             // if all 4 corners are behind the camera projected on z = 0, don't render
             bool behindCam = true;
@@ -206,8 +203,8 @@ class GrassTile{
 
 class Grass{
     private:
-        // GLuint _NbTileLength = 20;
-        GLuint _NbTileLength = 1;
+        GLuint _NbTileLength = 20;
+        // GLuint _NbTileLength = 1;
         // GLuint _TileWidth = 16;
         GLuint _TileWidth = 4;
         // GLuint _TileHeight = 16;

@@ -243,11 +243,12 @@ void Grass::render(Shaders* shaders, const glm::vec3& cameraPosition, const glm:
     shaders->setMat4f("proj", proj);
     shaders->setMat4f("view", view);
 
+    glm::mat4 mvp = proj * view;
     // _Material->setShaderValues(shaders);
     // auto startLoop = std::chrono::high_resolution_clock::now();
     for(auto& tile : _Tiles){
         // auto startTest = std::chrono::high_resolution_clock::now();
-        if(tile->shouldBeRendered(cameraPosition, view, proj)){
+        if(tile->shouldBeRendered(cameraPosition, mvp)){
         // if(true){
             // auto startDispatch = std::chrono::high_resolution_clock::now();
             tile->dispatchComputeShader();

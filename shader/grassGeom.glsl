@@ -310,13 +310,11 @@ float simplexPerlin(vec2 pos){
     return beta*snoise(vec2(v1,v2), 5);
 }
 
-float windField(vec2 uv, float dt) {
+float windField(vec2 uv, float dt, vec2 flowDirection) {
     const float speed = 0.8f;  // Adjust the speed of the wind
     const int octaves = 5;    // Adjust the number of octaves
     const float persistence = .5f;  // Adjust the persistence of the noise
     float scale = 1.f;  // Adjust the scale of the noise
-
-    vec2 flowDirection = normalize(vec2(1.0, 0.5));  // Adjust the main wind direction
 
     vec2 movingUV = uv + flowDirection * dt * speed;
     // generate wind field using multiple octaves of Simplex noise
@@ -329,7 +327,7 @@ float windField(vec2 uv, float dt) {
         amplitude *= persistence;  // Adjust the amplitude for each octave
     }
 
-    return windFieldStrength;
+    return windFieldStrength; // [-1, 1]
 }
 
 
@@ -370,7 +368,7 @@ vec2 getAnimatedPos(vec2 basePos, float height, float noise){
 
     float phaseY = basePos.y / height;
     float amplitudeY = 0.05f;
-    float frequencyY = 15.f * phaseY;
+    float frequencyY = 5.f * phaseY;
 
     float yDelta = amplitudeY*sin(frequencyY*theta + phaseY);
     // float yDelta = 0.f;
@@ -378,7 +376,7 @@ vec2 getAnimatedPos(vec2 basePos, float height, float noise){
 
     float phaseX = newY / height;
     float amplitudeX = 0.1f;
-    float frequencyX = 5.f * phaseX;
+    float frequencyX = 2.f * phaseX;
 
     float xDelta = amplitudeX*sin(frequencyX*theta + phaseX);
     // float xDelta = 0.f;
@@ -388,6 +386,7 @@ vec2 getAnimatedPos(vec2 basePos, float height, float noise){
 }
 
 void getVerticesPositionsAndNormals(vec3 pos, float width, float height, float tilt, vec2 bend, vec3 color,
+    vec2 flowDirection,
     out vec3 positions[NB_VERT_HIGH_LOD],
     out vec3 normals[NB_VERT_HIGH_LOD],
     out vec3 colors[NB_VERT_HIGH_LOD]
@@ -399,8 +398,8 @@ void getVerticesPositionsAndNormals(vec3 pos, float width, float height, float t
     float curWidth = width / 2.f;
 
     // float noise = infinitePerlin(pos.xz);
-    float noise = windField(pos.xz, time);
-    float noiseColor = windField(pos.xz, time);
+    float noise = windField(pos.xz, time, flowDirection);
+    float noiseColor = windField(pos.xz, time, flowDirection);
 
     // vec2 deltaSubtle = vec2(0.1f*abs(noiseSubtle), 0.01f*noiseSubtle);
 
@@ -457,14 +456,20 @@ vec3 getModelPos(vec3 center, vec3 positions[NB_VERT_HIGH_LOD], int vertex, floa
     return getModelPos(center, positions[vertex], rotation);
 }
 
-vec4 getWorldPos(vec3 center, vec3 position, float rotation){
+vec4 getWorldPos(vec3 center, vec3 position, float rotation, vec2 flowDirection, float height){
     vec3 curPosition = getModelPos(center, position, rotation);
+    // test flow direction
+    float noise = windField(center.xz, time, flowDirection); // [-1, 1]
+    float factor = 0.5f * (position.y / height);
+    vec3 direction = vec3(flowDirection.x, 0.f, flowDirection.y);
+    curPosition += noise * factor * direction; 
+
     vec4 worldPosition = proj * view * vec4(curPosition, 1.f);
     return worldPosition;
 }
 
-vec4 getWorldPos(vec3 center, vec3 positions[NB_VERT_HIGH_LOD], int vertex, float rotation){
-    return getWorldPos(center, positions[vertex], rotation);
+vec4 getWorldPos(vec3 center, vec3 positions[NB_VERT_HIGH_LOD], int vertex, float rotation, vec2 flowDirection, float height){
+    return getWorldPos(center, positions[vertex], rotation, flowDirection, height);
 }
 
 vec3 getRotatedNormals(vec3 normal, float rotation){
@@ -475,12 +480,12 @@ void createTriangle(vec3 center,
     vec3 positions[NB_VERT_HIGH_LOD], 
     vec3 normals[NB_VERT_HIGH_LOD], 
     vec3 colors[NB_VERT_HIGH_LOD],
-    float rotation, vec3 color, int indices[3]){
+    float height, float rotation, vec3 color, int indices[3], vec2 flowDirection){
     int idx = 0;
     for(int i=0; i<3; i++){
         idx = indices[i];
         vec3 modelPos = getModelPos(center, positions, idx, rotation);
-        vec4 worldPos = getWorldPos(center, positions, idx, rotation);
+        vec4 worldPos = getWorldPos(center, positions, idx, rotation, flowDirection, height);
         vec3 normal = getRotatedNormals(normals[idx], rotation);
         geomFragCol = colors[idx];
         geomFragNormal = normal;
@@ -491,7 +496,8 @@ void createTriangle(vec3 center,
     EndPrimitive();
 }
 
-void createTriangles(vec3 center, float rotation, vec3 color,
+void createTriangles(vec3 center, float rotation, vec3 color, float height,
+    vec2 flowDirection,
     vec3 positions[NB_VERT_HIGH_LOD], 
     vec3 normals[NB_VERT_HIGH_LOD],
     vec3 colors[NB_VERT_HIGH_LOD]
@@ -506,13 +512,13 @@ void createTriangles(vec3 center, float rotation, vec3 color,
         indices[0] = vertCounter;
         indices[1] = vertCounter+1;
         indices[2] = vertCounter+2;
-        createTriangle(center, positions, normals, colors, rotation, color, indices);
+        createTriangle(center, positions, normals, colors, height, rotation, color, indices, flowDirection);
 
         // second triangle
         indices[0] = vertCounter+2;
         indices[1] = vertCounter+1;
         indices[2] = vertCounter+3;
-        createTriangle(center, positions, normals, colors, rotation, color, indices);
+        createTriangle(center, positions, normals, colors, height, rotation, color, indices, flowDirection);
 
         vertCounter += 2;
     }
@@ -520,7 +526,7 @@ void createTriangles(vec3 center, float rotation, vec3 color,
     indices[0] = nbVert-3;
     indices[1] = nbVert-2;
     indices[2] = nbVert-1;
-    createTriangle(center, positions, normals, colors, rotation, color, indices);
+    createTriangle(center, positions, normals, colors, height, rotation, color, indices, flowDirection);
 }
 
 vec3 getAvgNormal(float tilt, float height){
@@ -555,7 +561,9 @@ void main(){
     vec3 positions[NB_VERT_HIGH_LOD];
     vec3 normals[NB_VERT_HIGH_LOD];
     vec3 colors[NB_VERT_HIGH_LOD];
-    getVerticesPositionsAndNormals(pos, width, height, tilt, bend, color, positions, normals, colors);
-    createTriangles(pos, rotation, color, positions, normals, colors);
+    vec2 flowDirection = normalize(vec2(1.0, 0.5));  // Adjust the main wind direction
+
+    getVerticesPositionsAndNormals(pos, width, height, tilt, bend, color, flowDirection, positions, normals, colors);
+    createTriangles(pos, rotation, color, height, flowDirection, positions, normals, colors);
 
 }

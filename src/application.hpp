@@ -8,9 +8,11 @@
 #include "light.hpp"
 #include "sun.hpp"
 
+#include <chrono>
 #include <glad/gl.h>
 #include <GL/gl.h>
 #include <GLFW/glfw3.h>
+#include <thread>
 
 using PointLights = std::vector<LightPointer>;
 
@@ -28,6 +30,7 @@ class Application{
         float _CurrentFrameTime = 0.f;
         float _LastFrameTime = 0.f;
         float _DeltaTime = 0.f;
+        float _TargetTime = 1.f / 60.f;
 
         bool _FirstMouse = true;
         double _LastMouseX;
@@ -45,6 +48,13 @@ class Application{
         void initShaders();
         void handleInput();
         void handleCameraInput();
+
+        void syncDt(){
+            float sleepTime = _TargetTime - _DeltaTime;
+            if(sleepTime > 0.f){
+                std::this_thread::sleep_for(std::chrono::duration<double>(sleepTime));
+            }
+        }
 
         void updateDt(){
             _CurrentFrameTime = static_cast<float>(glfwGetTime());
