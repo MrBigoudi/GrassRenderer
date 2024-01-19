@@ -115,6 +115,8 @@ At the moment, when having a lot of tiles we are getting some lags.
 
 - Another optimization is to also discard all the tiles that are outside a sphere of a certain radius around the camera.
 
-By doing these 2 optimizations, we can have arround 20 to 30 fps when having 20x20 tiles each filled with 4096 blades of grass using a laptop without a dedicated GPU.
+By doing these 2 optimizations, we can have arround 10 fps when having 20x20 tiles each filled with 4096 blades of grass using a laptop without a dedicated GPU.
+
+- Failed paralellization of buffers computations
 
 TODO: add fps viewer

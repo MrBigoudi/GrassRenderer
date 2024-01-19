@@ -95,7 +95,7 @@ vec3 getSpecular(vec3 oColor){
 
 void main(){
     vec3 color = geomFragCol;
-    // // vec3 color = geomFragNormal;
+    // vec3 color = geomFragNormal;
     // vec3 ambient = getAmbient(color);
     // vec3 diffuse = getDiffuse(color);
     // vec3 specular = getSpecular(color);

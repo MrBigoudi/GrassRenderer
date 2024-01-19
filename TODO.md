@@ -1,6 +1,5 @@
 # Todo list
 
-
 ## Bugs 
 
 - fix lighting
@@ -13,6 +12,5 @@
 
 ## Minor features
 
-- tests with time spent on each function
 - add comments
 - add imgui with the input settings

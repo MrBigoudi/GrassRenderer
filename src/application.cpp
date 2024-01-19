@@ -127,7 +127,6 @@ void Application::run(){
         glfwPollEvents();
         glfwSwapBuffers(_Window);
 
-        syncDt();
     }
 }
 

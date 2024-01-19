@@ -28,6 +28,9 @@ layout(binding = 6, std430) readonly buffer bends{
     vec2 iBend[];    // Grass blade bend
 };
 
+// uniform int nbBladesPerTile;
+// uniform int tileID;
+// uniform int nbParallelBuffers;
 
 out VertexData{
     vec4 _Position;
@@ -43,6 +46,8 @@ out VertexData{
 void main() {
     // int id = gl_InstanceID;
     int id = gl_VertexID;
+    // int id = gl_VertexID + (tileID % nbParallelBuffers) * nbBladesPerTile;
+
     vertexData._Position = iPosition[id];
     vertexData._Height = iHeight[id];
     vertexData._Width = iWidth[id];

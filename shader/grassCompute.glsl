@@ -41,6 +41,10 @@ uniform int gridNbCols;
 uniform int gridNbLines;
 uniform vec2 tilePos;
 uniform int tileID;
+
+// uniform int nbParallelBuffers;
+// uniform int nbBladesPerTile;
+
 const float PI = 3.1416f;
 
 const float MAX_WIDTH = 0.05f;
@@ -233,7 +237,8 @@ vec4 getColor(vec2 seed){
 }
 
 float getRotation(vec2 seed){
-    return radians(rand(seed) * 360.f);
+    // return radians(rand(seed) * 360.f);
+    return 0.f;
 }
 
 float getTilt(vec2 seed, float height){
@@ -257,6 +262,9 @@ void main() {
     int instanceIndex = int(globalID.x) 
                         + int(globalID.y) * int(gl_NumWorkGroups.x);
                         + int(globalID.z) * int(gl_NumWorkGroups.x) * int(gl_NumWorkGroups.y);
+
+    // int bufferIndex = instanceIndex + (tileID % nbParallelBuffers) * nbBladesPerTile;
+
     // Store data in buffers
     vec4 position = getRandomPosition(vec2(instanceIndex, tileID), vec2(tileID, instanceIndex));
     uint clumpId = getClumpId(position.xyz);
@@ -275,6 +283,8 @@ void main() {
     // float rotation = 0.f;
     // float tilt = 0.f;
     // vec2 bend = vec2(instanceIndex+1.f, 0.f);
+
+    // instanceIndex = bufferIndex;
 
     positions[instanceIndex] = position;
     heights[instanceIndex] = height;

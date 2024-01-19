@@ -49,13 +49,6 @@ class Application{
         void handleInput();
         void handleCameraInput();
 
-        void syncDt(){
-            float sleepTime = _TargetTime - _DeltaTime;
-            if(sleepTime > 0.f){
-                std::this_thread::sleep_for(std::chrono::duration<double>(sleepTime));
-            }
-        }
-
         void updateDt(){
             _CurrentFrameTime = static_cast<float>(glfwGetTime());
             _DeltaTime = _CurrentFrameTime - _LastFrameTime;

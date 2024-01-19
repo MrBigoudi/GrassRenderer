@@ -58,6 +58,8 @@ class GrassTile{
         GrassLOD _LOD; 
         GLuint _RadiusRender = 30.f;
 
+        GLuint _NbParallelBuffers = 10;
+
         // buffers compute shader
         GLuint _PositionBuffer;
         GLuint _HeightBuffer;
@@ -210,6 +212,8 @@ class Grass{
         // GLuint _TileHeight = 16;
         GLuint _TileHeight = 4;
         float _RadiusHighLOD = 20.f;
+
+        GLuint _NbParallelBuffers = 10;
 
         MaterialPointer _Material = nullptr;
         std::vector<GrassTile*> _Tiles;

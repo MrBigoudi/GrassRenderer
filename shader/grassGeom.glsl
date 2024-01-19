@@ -434,8 +434,8 @@ void getVerticesPositionsAndNormals(vec3 pos, float width, float height, float t
         // rotate the normals a bit
         // normals[i] = normal;
         // normals[i+1] = normal;
-        normals[i] = normalize(getRotationMatrix(PI * 0.3f) * normal);
-        normals[i+1] = normalize(getRotationMatrix(PI * (-0.3f)) * normal);
+        normals[i] = normalize(getRotationMatrix(PI * (-0.3f)) * normal);
+        normals[i+1] = normalize(getRotationMatrix(PI * 0.3f) * normal);
     }
 
     vec3 newPos = pos + vec3(P2, 0.f);
@@ -443,7 +443,8 @@ void getVerticesPositionsAndNormals(vec3 pos, float width, float height, float t
     // positions[nbVert-1] = getAnimatedPos(newPos, height, noise);
     vec2 bezierDerivative = quadraticBezierCurveDerivative(1.f, P0, P1, P2);
     vec3 bezierNormal = normalize(vec3(bezierDerivative.x, bezierDerivative.y, 0.f));
-    normals[nbVert-1] = cross(bezierNormal, widthTangent);
+    vec3 normal = cross(bezierNormal, widthTangent);
+    normals[nbVert-1] = normal;
     colors[nbVert-1] = TIP_COLOR;
     // colors[nbVert-1] = noiseColor*vec3(1.f,1.f,1.f);
 }

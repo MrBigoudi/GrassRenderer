@@ -113,6 +113,8 @@ void GrassTile::dispatchComputeShader(){
     _ComputeShader->setInt("gridNbLines", _GridNbLines);
     _ComputeShader->setVec2f("tilePos", _TilePos);
     _ComputeShader->setInt("tileID", (int)_TileId);
+    // _ComputeShader->setInt("nbParallelBuffers", _NbParallelBuffers);
+    // _ComputeShader->setInt("nbBladesPerTile", _NbGrassBlades);
 
     // Dispatch the compute shader
 
@@ -203,6 +205,8 @@ void GrassTile::render(Shaders* shaders, float time){
     shaders->use();
     shaders->setInt("tileLOD", _LOD);
     shaders->setFloat("time", time);
+    // shaders->setInt("nbParallelBuffers", _NbParallelBuffers);
+    // shaders->setInt("nbBladesPerTile", _NbGrassBlades);
     // shaders->setInt("tileWidth", tileWidth);
     // shaders->setInt("tileHeight", tileHeight);
     // glDrawArraysInstanced(GL_POINTS, 0, 1, _NbGrassBlades);
@@ -245,26 +249,17 @@ void Grass::render(Shaders* shaders, const glm::vec3& cameraPosition, const glm:
 
     glm::mat4 mvp = proj * view;
     // _Material->setShaderValues(shaders);
-    // auto startLoop = std::chrono::high_resolution_clock::now();
-    for(auto& tile : _Tiles){
-        // auto startTest = std::chrono::high_resolution_clock::now();
-        if(tile->shouldBeRendered(cameraPosition, mvp)){
-        // if(true){
-            // auto startDispatch = std::chrono::high_resolution_clock::now();
-            tile->dispatchComputeShader();
-            // auto endDispatch = std::chrono::high_resolution_clock::now();
-            // displayTime(startDispatch, endDispatch, "dispatch");
 
-            // auto startRender = std::chrono::high_resolution_clock::now();
-            tile->render(shaders, _TotalTime);
-            // auto endRender = std::chrono::high_resolution_clock::now();
-            // displayTime(startRender, endRender, "render");
+    // for(int i = 0; i<_Tiles.size(); i+=_NbParallelBuffers){
+        // #pragma omp parallel for
+        for(auto& tile : _Tiles){
+            if(tile->shouldBeRendered(cameraPosition, mvp)){
+            // if(true){
+                tile->dispatchComputeShader();
+                tile->render(shaders, _TotalTime);
+            }
         }
-        // auto endTest = std::chrono::high_resolution_clock::now();
-        // displayTime(startTest, endTest, "test");
-    }
-    // auto endLoop = std::chrono::high_resolution_clock::now();
-    // displayTime(startLoop, endLoop, "loop");
+    // }
 }
 
 void Grass::update(float dt, const glm::vec3& cameraPosition){
