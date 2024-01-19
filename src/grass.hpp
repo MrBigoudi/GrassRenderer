@@ -35,7 +35,12 @@ enum GrassLOD{
 
 class Grass;
 
-const GLuint NB_PARALLEL_BUFFERS = 2;
+const GLuint _NB_PARALLEL_BUFFERS = 10;
+// const GLuint _NB_PARALLEL_BUFFERS = 100;
+const GLuint _MAX_NB_GRASS_BLADES = 8192;
+// const GLuint _MAX_NB_GRASS_BLADES = 4096;
+// const GLuint _MIN_NB_GRASS_BLADES = 1024;
+const GLuint _MIN_NB_GRASS_BLADES = 256;
 
 
 class GrassTile{
@@ -45,10 +50,6 @@ class GrassTile{
     private:
         static GLuint _IdCounter;
         static GLint _MaxWorkGroupCountX, _MaxWorkGroupCountY, _MaxWorkGroupCountZ;
-        const static GLuint _MAX_NB_GRASS_BLADES = 8192;
-        // const static GLuint _MAX_NB_GRASS_BLADES = 4096;
-        // const static GLuint _MIN_NB_GRASS_BLADES = 1024;
-        const static GLuint _MIN_NB_GRASS_BLADES = 256;
 
     private:
         // GLuint _NbGrassBlades = 10;
@@ -63,6 +64,7 @@ class GrassTile{
         GLuint _TileWidth;
         GrassLOD _LOD; 
         GLuint _RadiusRender = 30.f;
+        ComputeShader* _ComputeShader = nullptr;
 
 
     private:
@@ -91,14 +93,15 @@ class GrassTile{
             }
             return false;
         }
+        void initShader(const std::string& shaderPath);
 
     public:
         GrassTile(const glm::vec2& tilePos, GLuint tileWidth, GLuint tileHeight,
-                GrassLOD tileLOD = GRASS_LOW_LOD);
+                GrassLOD tileLOD = GRASS_LOW_LOD, const std::string& shaderPath = "shader/grassCompute.glsl");
         
-        void dispatchComputeShader(ComputeShader* shader);
+        void dispatchComputeShader(int parallelId, GLuint vao);
         void render(Shaders* shaders, float time, GLuint vao);
-        // void render(Shaders* shaders, float time, int parallelTileNb);
+        // void render(Shaders* shaders, float time, int parallelTileNb, GLuint vao);
 
         void setNbBlades(const glm::vec3& cameraPosition){
             glm::vec3 projectedCameraPosition = glm::vec3(cameraPosition.x, 0.f, cameraPosition.z);
@@ -175,8 +178,6 @@ class GrassTile{
 
 class Grass{
     private:
-        const static GLuint _MAX_NB_GRASS_BLADES = 8192;
-        const static GLuint _MIN_NB_GRASS_BLADES = 256;
         // GLuint _NbTileLength = 100;
         GLuint _NbTileLength = 20;
         // GLuint _TileWidth = 16;
@@ -197,14 +198,12 @@ class Grass{
         GLuint _RotationBuffer;
         GLuint _TiltBuffer;
         GLuint _BendBuffer;
-        ComputeShader* _ComputeShader = nullptr;
 
         // buffers vertex shader
         GLuint _VAO;
 
     private:
         void initBuffers();
-        void initShader(const std::string& shaderPath);
         void updateRenderingBuffers();
 
         // void checkBufferReadError(const std::string& bufferName) const {
@@ -269,7 +268,8 @@ class Grass{
         // }
 
     public:
-        Grass(const std::string& shaderPath = "shader/grassCompute.glsl");
+        Grass();
+        void renderBatch(Shaders* shaders, float time, const std::vector<GrassLOD>& lods, const std::vector<int>&  nbBlades);
         void render(Shaders* shaders, const Camera* camera, const glm::mat4& view, const glm::mat4& proj);
         void update(float dt, const glm::vec3& cameraPosition);
 

@@ -42,8 +42,8 @@ uniform int gridNbLines;
 uniform vec2 tilePos;
 uniform int tileID;
 
-// uniform int nbParallelBuffers;
-// uniform int nbBladesPerTile;
+uniform int parallelId;
+uniform int nbBladesPerTile;
 
 const float PI = 3.1416f;
 
@@ -263,7 +263,7 @@ void main() {
                         + int(globalID.y) * int(gl_NumWorkGroups.x);
                         + int(globalID.z) * int(gl_NumWorkGroups.x) * int(gl_NumWorkGroups.y);
 
-    // int bufferIndex = instanceIndex + (tileID % nbParallelBuffers) * nbBladesPerTile;
+    int bufferIndex = instanceIndex + (parallelId * nbBladesPerTile);
 
     // Store data in buffers
     vec4 position = getRandomPosition(vec2(instanceIndex, tileID), vec2(tileID, instanceIndex));
@@ -284,7 +284,7 @@ void main() {
     // float tilt = 0.f;
     // vec2 bend = vec2(instanceIndex+1.f, 0.f);
 
-    // instanceIndex = bufferIndex;
+    instanceIndex = bufferIndex;
 
     positions[instanceIndex] = position;
     heights[instanceIndex] = height;

@@ -119,4 +119,6 @@ At the moment, when having a lot of tiles we are getting some lags.
 
 - Another thing that made especially the loading time faster is a rethinking of the compute buffers. Indeed, since now, every tile had it's own Vertex Array Object which was really slowing down the initialization time. Now, there is only one instance of the vao for every tile.
 
-( I also tried but failed to implement a paralellization of buffers computations -> solution, use Vulkan queue !)
+- One last thing for optimization was the implementation as a parallel pipeline. The idea was to fill computer buffers of the next tile to be rendered while the previous one enters the vertex shader phase. However, because I'm using OpenGL and not a more modern and parallelized pipeline (like the Vulkan queues), I had to find a turn arround. The solution was to make buffers `n` times bigger. Then, I can loop over `n` tile batches where I fill the same buffers but starting from different indices. By doing so, I can have a single memory barrier after the compute shader phase. However, because all the tiles don't have the same number of blades (see previous optimization point), I can't have a single call to `drawArrays`. Once again, this would have been a lot easier using the queue calls of the Vulkan's pipeline (this is why I'll try to learn Vulkan for futur projects).
+
+With all these optimizations, we went from 5 to 30 FPS. TODO: real values
