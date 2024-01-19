@@ -52,7 +52,7 @@ void Application::render(const glm::mat4& view, const glm::mat4& proj){
     glClearColor(0.383f, 0.632f, 0.800f, 1.0f);
     // glClearColor(0.f, 0.f, 0.1f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    _Grass->render(_Shaders.get(), _Camera->getPosition(), view, proj);
+    _Grass->render(_Shaders.get(), _Camera, view, proj);
     _Axis->render(view, proj);
     _Sun->render(view, proj);
 }
@@ -94,9 +94,9 @@ void Application::init(){
     initGLFW();
     initGLAD();
     initShaders();
-    _Camera = new Camera((float)_Width / (float)_Height);
     _Axis = new Axis();
     _Grass = new Grass();
+    _Camera = new Camera(_Grass->getCenter(), (float)_Width / (float)_Height);
     initLights();
 
     glEnable(GL_DEPTH_TEST);

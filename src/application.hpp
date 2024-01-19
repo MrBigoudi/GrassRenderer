@@ -53,7 +53,7 @@ class Application{
             _CurrentFrameTime = static_cast<float>(glfwGetTime());
             _DeltaTime = _CurrentFrameTime - _LastFrameTime;
             _LastFrameTime = _CurrentFrameTime;
-            fprintf(stdout, "FPS: %f\n", 1.f/_DeltaTime);
+            // fprintf(stdout, "FPS: %f\n", 1.f/_DeltaTime);
         }
 
         void setWireframeMode() const {

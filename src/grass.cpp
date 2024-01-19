@@ -243,7 +243,7 @@ Grass::Grass(){
     glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 2, &GrassTile::_MaxWorkGroupCountZ);
 }
 
-void Grass::render(Shaders* shaders, const glm::vec3& cameraPosition, const glm::mat4& view, const glm::mat4& proj){
+void Grass::render(Shaders* shaders, const Camera* camera, const glm::mat4& view, const glm::mat4& proj){
     shaders->setMat4f("proj", proj);
     shaders->setMat4f("view", view);
 
@@ -253,7 +253,7 @@ void Grass::render(Shaders* shaders, const glm::vec3& cameraPosition, const glm:
     // for(int i = 0; i<_Tiles.size(); i+=_NbParallelBuffers){
         // #pragma omp parallel for
         for(auto& tile : _Tiles){
-            if(tile->shouldBeRendered(cameraPosition, mvp)){
+            if(tile->shouldBeRendered(camera->getPosition(), camera->createFrustrum())){
             // if(true){
                 tile->dispatchComputeShader();
                 tile->render(shaders, _TotalTime);
@@ -274,9 +274,9 @@ void Grass::update(float dt, const glm::vec3& cameraPosition){
         // check if boundig box within camera radius
         if(doCircleRectangleIntersect(cameraPosition, _RadiusHighLOD, 
             tileUpLeft, tileUpRight, tileDownLeft, tileDownRight)){
-            tile->setLOD(GRASS_HIGH_LOD);
+            tile->setLOD(GRASS_HIGH_LOD, cameraPosition);
         } else {
-            tile->setLOD(GRASS_LOW_LOD);
+            tile->setLOD(GRASS_LOW_LOD, cameraPosition);
         }
     }
 }

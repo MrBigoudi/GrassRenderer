@@ -15,3 +15,7 @@ bool doCircleRectangleIntersect(
 void displayTime(std::chrono::high_resolution_clock::time_point start,
                 std::chrono::high_resolution_clock::time_point end,
                 const std::string& msg = "");
+
+void printGlm(const glm::vec2& vec);
+void printGlm(const glm::vec3& vec);
+void printGlm(const glm::vec4& vec);

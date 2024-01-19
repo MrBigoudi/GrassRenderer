@@ -237,8 +237,8 @@ vec4 getColor(vec2 seed){
 }
 
 float getRotation(vec2 seed){
-    // return radians(rand(seed) * 360.f);
-    return 0.f;
+    return radians(rand(seed) * 360.f);
+    // return 0.f;
 }
 
 float getTilt(vec2 seed, float height){

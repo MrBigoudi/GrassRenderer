@@ -7,6 +7,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include <vector>
+#include "frustum.hpp"
 
 // Defines several possible options for camera movement. Used as abstraction to stay away from window-system specific input methods
 enum CameraMovement {
@@ -45,12 +46,11 @@ class Camera{
     public:
         // constructor with vectors
         Camera(
+            const glm::vec3& position,
             float aspectRatio,
             float fov = 45.f,
             float near = 0.1f,
-            float far = 100.f,
-            const glm::vec3& position = glm::vec3(1.f, 0.f, 1.f),
-            // const glm::vec3& position = glm::vec3(12.f, 1.f, 12.0f),
+            float far = 200.f,
             const glm::vec3& worldUp = glm::vec3(0.f, 1.f, 0.f)
         ){
             _AspectRatio = aspectRatio;
@@ -62,19 +62,19 @@ class Camera{
             updateCameraVectors();
         }
 
-        glm::vec3 getAt(){
+        glm::vec3 getAt() const {
             return _At;
         }
 
-        glm::vec3 getPosition(){
+        glm::vec3 getPosition() const {
             return _Eye;
         }
 
-        glm::mat4 getView(){
+        glm::mat4 getView() const {
             return glm::lookAt(_Eye, _Eye + _At, _Up);
         }
 
-        glm::mat4 getPerspective(){
+        glm::mat4 getPerspective() const {
             return glm::perspective(glm::radians(_Fov), _AspectRatio, _Near, _Far);
         }
 
@@ -101,11 +101,11 @@ class Camera{
                     // _At  += _Right * velocity;
                     break;
                 case UP:
-                    _Eye += _Up * velocity;
+                    _Eye += _WorldUp * velocity;
                     // _At += _Up * velocity;
                     break;
                 case DOWN:
-                    _Eye -= _Up * velocity;
+                    _Eye -= _WorldUp * velocity;
                     // _At  -= _Up * velocity;
                     break;
             }
@@ -141,5 +141,26 @@ class Camera{
             // also re-calculate the Right and Up vector
             _Right = glm::normalize(glm::cross(_At, _WorldUp));
             _Up    = glm::normalize(glm::cross(_Right, _At));
+        }
+
+    public:
+        Frustum createFrustrum() const {
+            Frustum frustum;
+            const float halfVSide = _Far * tanf(_Fov * .5f);
+            const float halfHSide = halfVSide * _AspectRatio;
+            const glm::vec3 frontMultFar = _Far * _At;
+
+            frustum._NearFace = { _Eye + _Near * _At, _At };
+            frustum._FarFace = { _Eye + frontMultFar, -_At };
+            frustum._RightFace = { _Eye,
+                                    glm::cross(frontMultFar - _Right * halfHSide, _Up) };
+            frustum._LeftFace = { _Eye,
+                                    glm::cross(_Up,frontMultFar + _Right * halfHSide) };
+            frustum._TopFace = { _Eye,
+                                    glm::cross(_Right, frontMultFar - _Up * halfVSide) };
+            frustum._BottomFace = { _Eye,
+                                    glm::cross(frontMultFar + _Up * halfVSide, _Right) };
+
+            return frustum;
         }
 };

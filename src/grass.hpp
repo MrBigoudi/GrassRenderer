@@ -1,6 +1,8 @@
 #pragma once
 
+#include "camera.hpp"
 #include "computeShader.hpp"
+#include "frustum.hpp"
 #include "material.hpp"
 #include "shaders.hpp"
 #include "utils.hpp"
@@ -33,6 +35,9 @@ enum GrassLOD{
 
 class Grass;
 
+const GLuint NB_PARALLEL_BUFFERS = 2;
+
+
 class GrassTile{
 
     friend Grass;
@@ -40,13 +45,14 @@ class GrassTile{
     private:
         static GLuint _IdCounter;
         static GLint _MaxWorkGroupCountX, _MaxWorkGroupCountY, _MaxWorkGroupCountZ;
-        const static GLuint _NB_GRASS_BLADES_HIGH_LOD = 4096;
-        // const static GLuint _NB_GRASS_BLADES_HIGH_LOD = 256;
-        const static GLuint _NB_GRASS_BLADES_LOW_LOD = 1024;
+        const static GLuint _MAX_NB_GRASS_BLADES = 8192;
+        // const static GLuint _MAX_NB_GRASS_BLADES = 4096;
+        // const static GLuint _MIN_NB_GRASS_BLADES = 1024;
+        const static GLuint _MIN_NB_GRASS_BLADES = 256;
 
     private:
         // GLuint _NbGrassBlades = 10;
-        GLuint _NbGrassBlades = _NB_GRASS_BLADES_HIGH_LOD;
+        GLuint _NbGrassBlades = _MAX_NB_GRASS_BLADES;
         // GLuint _NbGrassBlades = 2 << 20;
         GLuint _GridNbCols = 16;
         GLuint _GridNbLines = 16;
@@ -58,7 +64,6 @@ class GrassTile{
         GrassLOD _LOD; 
         GLuint _RadiusRender = 30.f;
 
-        GLuint _NbParallelBuffers = 10;
 
         // buffers compute shader
         GLuint _PositionBuffer;
@@ -139,6 +144,32 @@ class GrassTile{
             exit(EXIT_SUCCESS);
         }
 
+        bool isTileCornerInFrontOfPlane(const Plane& plane, const glm::vec3& tileCorner){
+            float result = plane.getSignedDistanceToPlane(tileCorner);
+            return result >= 0;
+        }
+
+        bool isTileCornerInFrustum(const Frustum& frustum, const glm::vec3& tileCorner){
+            bool isWithinFrustum = true;
+            return 
+                   isTileCornerInFrontOfPlane(frustum._BottomFace, tileCorner)
+                && isTileCornerInFrontOfPlane(frustum._TopFace, tileCorner)
+                && isTileCornerInFrontOfPlane(frustum._LeftFace, tileCorner)
+                && isTileCornerInFrontOfPlane(frustum._RightFace, tileCorner)
+                && isTileCornerInFrontOfPlane(frustum._FarFace, tileCorner)
+                && isTileCornerInFrontOfPlane(frustum._NearFace, tileCorner);
+        }
+
+        bool isTileInFrustrum(const Frustum& frustum, const std::vector<glm::vec3>& corners){
+            for(const auto& corner : corners){
+                glm::vec3 cornerTmp = glm::vec3(corner.x, corner.y, corner.z);
+                if(isTileCornerInFrustum(frustum, cornerTmp)){
+                    return true;
+                }
+            }
+            return false;
+        }
+
     public:
         GrassTile(const glm::vec2& tilePos, GLuint tileWidth, GLuint tileHeight,
                 GrassLOD tileLOD = GRASS_LOW_LOD,
@@ -146,17 +177,42 @@ class GrassTile{
         
         void dispatchComputeShader();
         void render(Shaders* shaders, float time);
-        void setLOD(GrassLOD newLOD){
+
+        void setNbBlades(const glm::vec3& cameraPosition){
+            glm::vec3 projectedCameraPosition = glm::vec3(cameraPosition.x, 0.f, cameraPosition.z);
+            glm::vec3 projectedTilePosition = getCenter();
+            float dist = glm::distance(projectedCameraPosition, projectedTilePosition);
+
+            if(dist > _RadiusRender){
+                _NbGrassBlades = _MIN_NB_GRASS_BLADES;
+                return;
+            }
+            float alpha = (dist/_RadiusRender);
+            _NbGrassBlades = _MAX_NB_GRASS_BLADES * (1.f - alpha) + _MIN_NB_GRASS_BLADES * alpha;
+            // std::cout << "alpha: " << alpha << ", nb b: " << _NbGrassBlades << ", pos: ";
+            // printGlm(projectedTilePosition);
+            // std::cout << ", cam pos: ";
+            // printGlm(projectedCameraPosition);
+            // std::cout << std::endl;
+        }
+
+        void setLOD(GrassLOD newLOD, const glm::vec3& cameraPosition){
             _LOD = newLOD;
             switch (_LOD) {
                 case GRASS_HIGH_LOD:
-                    _NbGrassBlades = _NB_GRASS_BLADES_HIGH_LOD;
+                    setNbBlades(cameraPosition);
                     break;
                 case GRASS_LOW_LOD:
-                    _NbGrassBlades = _NB_GRASS_BLADES_LOW_LOD;
+                    setNbBlades(cameraPosition);
+                    break;
             }
         }
-        glm::vec3 getPos(){
+
+        glm::vec3 getCenter() const {
+            return getPos() + glm::vec3(_TileWidth >> 1, 0.f, _TileHeight >> 1);
+        }
+
+        glm::vec3 getPos() const {
             glm::vec3 tmp;
             tmp.x = _TilePos.x;
             tmp.y = 0.f;
@@ -164,40 +220,32 @@ class GrassTile{
             return tmp;
         }
 
-        bool shouldBeRendered(const glm::vec3& cameraPosition, const glm::mat4& mvp){
+
+        // bool shouldBeRendered(const glm::vec3& cameraPosition, const glm::mat4& mvp){
+        bool shouldBeRendered(const glm::vec3& cameraPosition, const Frustum& frustum){
             // auto startTest = std::chrono::high_resolution_clock::now();
             
-            std::vector<glm::vec4> corners = {
-                glm::vec4(_TilePos.x, 0.f, _TilePos.y, 1.f),
-                glm::vec4(_TilePos.x+_TileWidth, 0.f, _TilePos.y, 1.f),
-                glm::vec4(_TilePos.x, 0.f, _TilePos.y+_TileHeight, 1.f),
-                glm::vec4(_TilePos.x+_TileWidth, 0.f, _TilePos.y+_TileHeight, 1.f)
+            std::vector<glm::vec3> corners = {
+                getPos(), // upleft
+                getPos() + glm::vec3(_TileWidth, 0.f, 0.f), // upright
+                getPos() + glm::vec3(0.f, 0.f, _TileHeight), //downleft
+                getPos() + glm::vec3(_TileWidth, 0.f, _TileHeight) //downright
             };
 
             bool withinCircle = doCircleRectangleIntersect(
                 glm::vec3(cameraPosition.x, 0.f, cameraPosition.z), 
                 _RadiusRender,
-                glm::vec3(corners[0].x, 0.f, corners[0].z),
-                glm::vec3(corners[0].x, 0.f, corners[0].z),
-                glm::vec3(corners[0].x, 0.f, corners[0].z),
-                glm::vec3(corners[0].x, 0.f, corners[0].z)
+                corners[0], corners[1], corners[2], corners[3]
             );
             if(!withinCircle) return false;
 
             // if all 4 corners are behind the camera projected on z = 0, don't render
-            bool behindCam = true;
-            for(int i=0; i<corners.size(); i++){
-                float z = (mvp*corners[i]).z;
-                if(z > 0.f){// in front
-                    behindCam = false;
-                    break;
-                }
-            }
+            bool inFrustrum = isTileInFrustrum(frustum, corners);
 
             // auto endTest = std::chrono::high_resolution_clock::now();
             // displayTime(startTest, endTest, "test");
 
-            return !behindCam;
+            return inFrustrum;
             // return true;
         }
 };
@@ -205,7 +253,7 @@ class GrassTile{
 
 class Grass{
     private:
-        GLuint _NbTileLength = 20;
+        GLuint _NbTileLength = 100;
         // GLuint _NbTileLength = 1;
         // GLuint _TileWidth = 16;
         GLuint _TileWidth = 4;
@@ -213,14 +261,19 @@ class Grass{
         GLuint _TileHeight = 4;
         float _RadiusHighLOD = 20.f;
 
-        GLuint _NbParallelBuffers = 10;
-
         MaterialPointer _Material = nullptr;
         std::vector<GrassTile*> _Tiles;
         float _TotalTime = 0.f;
 
     public:
         Grass();
-        void render(Shaders* shaders, const glm::vec3& cameraPosition, const glm::mat4& view, const glm::mat4& proj);
+        void render(Shaders* shaders, const Camera* camera, const glm::mat4& view, const glm::mat4& proj);
         void update(float dt, const glm::vec3& cameraPosition);
+
+        glm::vec3 getCenter() const {
+            float x = 0.5f * (_NbTileLength * _TileWidth);
+            float z = 0.5f * (_NbTileLength * _TileHeight);
+            float y = 1.f;
+            return glm::vec3(x,y,z);
+        }
 };

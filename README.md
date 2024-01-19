@@ -111,12 +111,10 @@ To fix this issue, we used a more complex Perlin noise called the simplex Perlin
 
 At the moment, when having a lot of tiles we are getting some lags.
 
-- Since now, we were always sending the grass tiles info to both the compute shader and the graphics pipeline. A first optimization could be to only send tiles that are within a certain radius from the camera's position but also only the ones that are in front of the camera.
+- Since now, we were always sending the grass tiles info to both the compute shader and the graphics pipeline. A first optimization could be to only send tiles that are within a sphere of a certain radius around the camera.
 
-- Another optimization is to also discard all the tiles that are outside a sphere of a certain radius around the camera.
+- Another optimization is to apply basic frsustum culling in the CPU side to avoid sending data from tiles that are completely outside the camera frsutrum.
 
-By doing these 2 optimizations, we can have arround 10 fps when having 20x20 tiles each filled with 4096 blades of grass using a laptop without a dedicated GPU.
+- Finally, we can also try to have a dynamic number of grass blades per tile depending on their distance to the camera center.
 
-- Failed paralellization of buffers computations
-
-TODO: add fps viewer
+( I also tried but failed to implement a paralellization of buffers computations)

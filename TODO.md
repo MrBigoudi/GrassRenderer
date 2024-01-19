@@ -3,14 +3,13 @@
 ## Bugs 
 
 - fix lighting
-- when looking up should be 60 fps
 
 ## Major features
 
-- Terrain heightmap
-- Culling and optimizations
+- Parallelize compute and vertex shaders
+- FPS viewer
+- add imgui with the input settings
 
 ## Minor features
 
 - add comments
-- add imgui with the input settings
