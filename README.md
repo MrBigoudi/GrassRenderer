@@ -115,6 +115,8 @@ At the moment, when having a lot of tiles we are getting some lags.
 
 - Another optimization is to apply basic frsustum culling in the CPU side to avoid sending data from tiles that are completely outside the camera frsutrum.
 
-- Finally, we can also try to have a dynamic number of grass blades per tile depending on their distance to the camera center.
+- We can also try to have a dynamic number of grass blades per tile depending on their distance to the camera center.
 
-( I also tried but failed to implement a paralellization of buffers computations)
+- Another thing that made especially the loading time faster is a rethinking of the compute buffers. Indeed, since now, every tile had it's own Vertex Array Object which was really slowing down the initialization time. Now, there is only one instance of the vao for every tile.
+
+( I also tried but failed to implement a paralellization of buffers computations -> solution, use Vulkan queue !)

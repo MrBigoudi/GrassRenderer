@@ -65,85 +65,7 @@ class GrassTile{
         GLuint _RadiusRender = 30.f;
 
 
-        // buffers compute shader
-        GLuint _PositionBuffer;
-        GLuint _HeightBuffer;
-        GLuint _WidthBuffer;
-        GLuint _ColorBuffer;
-        GLuint _RotationBuffer;
-        GLuint _TiltBuffer;
-        GLuint _BendBuffer;
-        ComputeShader* _ComputeShader = nullptr;
-
-        // buffers vertex shader
-        GLuint _VAO;
-
     private:
-        void initBuffers();
-        void initShader(const std::string& shaderPath);
-        void updateRenderingBuffers();
-
-        void checkBufferReadError(const std::string& bufferName) const {
-            auto error = glGetError();
-            if (error != GL_NO_ERROR) {
-                fprintf(stderr, "Failed to display the buffer %s!\n\tOpenGL error: %s\n", 
-                    bufferName.c_str(),
-                    gluErrorString(error)
-                );
-                ErrorHandler::handle(ErrorCodes::GL_ERROR);
-            }
-        }
-
-        void printFloatBuffer(GLuint buffer, const std::string& bufferName) const {
-            std::vector<float> bufferData(_NbGrassBlades);
-            glGetNamedBufferSubData(buffer, 0, _NbGrassBlades * sizeof(float), bufferData.data());
-            checkBufferReadError(bufferName);
-            std::cout << "Contents of buffer '" << bufferName << "':\n";
-            for (GLuint i = 0; i < _NbGrassBlades; i++) {
-                std::cout << bufferData[i] << " ";
-            }
-            std::cout << std::endl;
-        }
-
-        void printVec4Buffer(GLuint buffer, const std::string& bufferName) const {
-            std::vector<float> bufferData(4*_NbGrassBlades);
-            glGetNamedBufferSubData(buffer, 0, _NbGrassBlades * 4 * sizeof(float), bufferData.data());
-            checkBufferReadError(bufferName);
-            std::cout << "Contents of buffer '" << bufferName << "':\n";
-            for (GLuint i = 0; i < 4*_NbGrassBlades; i+=4) {
-                std::cout << "("
-                    << bufferData[i] << ","
-                    << bufferData[i+1] << ","
-                    << bufferData[i+2] << ","
-                    << bufferData[i+3] << ") ";
-            }
-            std::cout << std::endl;
-        }
-
-        void printVec2Buffer(GLuint buffer, const std::string& bufferName) const {
-            std::vector<float> bufferData(2*_NbGrassBlades);
-            glGetNamedBufferSubData(buffer, 0, _NbGrassBlades * 2 * sizeof(float), bufferData.data());
-            checkBufferReadError(bufferName);
-            std::cout << "Contents of buffer '" << bufferName << "':\n";
-            for (GLuint i = 0; i < 2*_NbGrassBlades; i+=2) {
-                std::cout << "("
-                    << bufferData[i] << ","
-                    << bufferData[i+1] << ") ";
-            }
-            std::cout << std::endl;
-        }
-
-        void printBuffers() const {
-            printVec4Buffer(_PositionBuffer, "Position");
-            printFloatBuffer(_HeightBuffer, "Height");
-            printFloatBuffer(_HeightBuffer, "Width");
-            printVec4Buffer(_ColorBuffer, "Color");
-            printFloatBuffer(_RotationBuffer, "Rotation");
-            printFloatBuffer(_TiltBuffer, "Tilt");
-            printVec2Buffer(_BendBuffer, "Bend");
-            exit(EXIT_SUCCESS);
-        }
-
         bool isTileCornerInFrontOfPlane(const Plane& plane, const glm::vec3& tileCorner){
             float result = plane.getSignedDistanceToPlane(tileCorner);
             return result >= 0;
@@ -172,11 +94,11 @@ class GrassTile{
 
     public:
         GrassTile(const glm::vec2& tilePos, GLuint tileWidth, GLuint tileHeight,
-                GrassLOD tileLOD = GRASS_LOW_LOD,
-                const std::string& shaderPath = "shader/grassCompute.glsl");
+                GrassLOD tileLOD = GRASS_LOW_LOD);
         
-        void dispatchComputeShader();
-        void render(Shaders* shaders, float time);
+        void dispatchComputeShader(ComputeShader* shader);
+        void render(Shaders* shaders, float time, GLuint vao);
+        // void render(Shaders* shaders, float time, int parallelTileNb);
 
         void setNbBlades(const glm::vec3& cameraPosition){
             glm::vec3 projectedCameraPosition = glm::vec3(cameraPosition.x, 0.f, cameraPosition.z);
@@ -253,8 +175,10 @@ class GrassTile{
 
 class Grass{
     private:
-        GLuint _NbTileLength = 100;
-        // GLuint _NbTileLength = 1;
+        const static GLuint _MAX_NB_GRASS_BLADES = 8192;
+        const static GLuint _MIN_NB_GRASS_BLADES = 256;
+        // GLuint _NbTileLength = 100;
+        GLuint _NbTileLength = 20;
         // GLuint _TileWidth = 16;
         GLuint _TileWidth = 4;
         // GLuint _TileHeight = 16;
@@ -265,8 +189,87 @@ class Grass{
         std::vector<GrassTile*> _Tiles;
         float _TotalTime = 0.f;
 
+        // buffers compute shader
+        GLuint _PositionBuffer;
+        GLuint _HeightBuffer;
+        GLuint _WidthBuffer;
+        GLuint _ColorBuffer;
+        GLuint _RotationBuffer;
+        GLuint _TiltBuffer;
+        GLuint _BendBuffer;
+        ComputeShader* _ComputeShader = nullptr;
+
+        // buffers vertex shader
+        GLuint _VAO;
+
+    private:
+        void initBuffers();
+        void initShader(const std::string& shaderPath);
+        void updateRenderingBuffers();
+
+        // void checkBufferReadError(const std::string& bufferName) const {
+        //     auto error = glGetError();
+        //     if (error != GL_NO_ERROR) {
+        //         fprintf(stderr, "Failed to display the buffer %s!\n\tOpenGL error: %s\n", 
+        //             bufferName.c_str(),
+        //             gluErrorString(error)
+        //         );
+        //         ErrorHandler::handle(ErrorCodes::GL_ERROR);
+        //     }
+        // }
+
+        // void printFloatBuffer(GLuint buffer, const std::string& bufferName) const {
+        //     std::vector<float> bufferData(_NbGrassBlades);
+        //     glGetNamedBufferSubData(buffer, 0, _NbGrassBlades * sizeof(float), bufferData.data());
+        //     checkBufferReadError(bufferName);
+        //     std::cout << "Contents of buffer '" << bufferName << "':\n";
+        //     for (GLuint i = 0; i < _NbGrassBlades; i++) {
+        //         std::cout << bufferData[i] << " ";
+        //     }
+        //     std::cout << std::endl;
+        // }
+
+        // void printVec4Buffer(GLuint buffer, const std::string& bufferName) const {
+        //     std::vector<float> bufferData(4*_NbGrassBlades);
+        //     glGetNamedBufferSubData(buffer, 0, _NbGrassBlades * 4 * sizeof(float), bufferData.data());
+        //     checkBufferReadError(bufferName);
+        //     std::cout << "Contents of buffer '" << bufferName << "':\n";
+        //     for (GLuint i = 0; i < 4*_NbGrassBlades; i+=4) {
+        //         std::cout << "("
+        //             << bufferData[i] << ","
+        //             << bufferData[i+1] << ","
+        //             << bufferData[i+2] << ","
+        //             << bufferData[i+3] << ") ";
+        //     }
+        //     std::cout << std::endl;
+        // }
+
+        // void printVec2Buffer(GLuint buffer, const std::string& bufferName) const {
+        //     std::vector<float> bufferData(2*_NbGrassBlades);
+        //     glGetNamedBufferSubData(buffer, 0, _NbGrassBlades * 2 * sizeof(float), bufferData.data());
+        //     checkBufferReadError(bufferName);
+        //     std::cout << "Contents of buffer '" << bufferName << "':\n";
+        //     for (GLuint i = 0; i < 2*_NbGrassBlades; i+=2) {
+        //         std::cout << "("
+        //             << bufferData[i] << ","
+        //             << bufferData[i+1] << ") ";
+        //     }
+        //     std::cout << std::endl;
+        // }
+
+        // void printBuffers() const {
+        //     printVec4Buffer(_PositionBuffer, "Position");
+        //     printFloatBuffer(_HeightBuffer, "Height");
+        //     printFloatBuffer(_HeightBuffer, "Width");
+        //     printVec4Buffer(_ColorBuffer, "Color");
+        //     printFloatBuffer(_RotationBuffer, "Rotation");
+        //     printFloatBuffer(_TiltBuffer, "Tilt");
+        //     printVec2Buffer(_BendBuffer, "Bend");
+        //     exit(EXIT_SUCCESS);
+        // }
+
     public:
-        Grass();
+        Grass(const std::string& shaderPath = "shader/grassCompute.glsl");
         void render(Shaders* shaders, const Camera* camera, const glm::mat4& view, const glm::mat4& proj);
         void update(float dt, const glm::vec3& cameraPosition);
 
