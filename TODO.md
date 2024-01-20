@@ -6,7 +6,6 @@
 
 ## Major features
 
-- Parallelize compute and vertex shaders
 - FPS viewer
 - add imgui with the input settings
 
