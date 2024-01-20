@@ -294,10 +294,10 @@ void Grass::render(Shaders* shaders, const Camera* camera, const glm::mat4& view
     // }
 
     for(int i=0; i<_Tiles.size(); i+=_NB_PARALLEL_BUFFERS){
-        // #pragma omp parallel for
         std::vector<int> nbBlades;
         std::vector<GrassLOD> lods;
         bool shouldBeRendered = false;
+        // #pragma omp parallel for
         for(int j = 0; j<_NB_PARALLEL_BUFFERS; j++){
             auto& tile = _Tiles[i+j];
             if(tile->shouldBeRendered(camera->getPosition(), frustum)){
