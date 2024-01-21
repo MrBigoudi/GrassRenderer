@@ -27,10 +27,11 @@ enum MouseMode{
 };
 
 class Application{
+    public:
+        static const GLuint _Width = 1280;
+        static const GLuint _Height = 720;
     private:
         GLFWwindow* _Window = nullptr;
-        GLuint _Width = 1280;
-        GLuint _Height = 720;
         ShadersPointer _Shaders = nullptr;
 
         Camera* _Camera = nullptr;

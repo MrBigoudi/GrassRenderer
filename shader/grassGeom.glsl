@@ -33,6 +33,7 @@ in VertexData{
 out vec3 geomFragCol;
 out vec3 geomFragNormal;
 out vec3 geomFragPos;
+// out float geomFragLod;
 
 uniform vec3 camPos;
 uniform vec3 camAt;
@@ -491,6 +492,7 @@ void createTriangle(vec3 center,
         geomFragCol = colors[idx];
         geomFragNormal = normal;
         geomFragPos = modelPos;
+        // geomFragLod = tileLOD == HIGH_LOD ? 1 : 0;
         gl_Position = worldPos;
         EmitVertex();    
     }

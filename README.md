@@ -87,14 +87,12 @@ instead of
 
 resulting in a lot of blades being at position `(0,0,0)` and with a black color `(0,0,0)`.
 
-## Step 10 better colors and lighting
+## Step 10 better colors
 
 The blades still look a bit boring. To make things more realistic, we will change how the blade colors are generated.
 
 - First for the blade color, we use a gradient to make colors vary from a dark green color at the bottom to a yellowish color at the tip.
 ![gradient colors](report/bladesGradients.png)
-
-TODO: fix lighting system
 
 ## Step 11 wind system
 
@@ -107,7 +105,7 @@ To fix this issue, we used a more complex Perlin noise called the simplex Perlin
 
 - To animate the grass as a whole we use the wind direction to move the vertices of the blade. ![global movement](report/bladeWindGlobal.png)
 
-## Step 12 some optimizations
+## Step 12 Optimizations
 
 At the moment, when having a lot of tiles we are getting some lags.
 
@@ -121,4 +119,17 @@ At the moment, when having a lot of tiles we are getting some lags.
 
 - One last thing for optimization was the implementation as a parallel pipeline. The idea was to fill computer buffers of the next tile to be rendered while the previous one enters the vertex shader phase. However, because I'm using OpenGL and not a more modern and parallelized pipeline (like the Vulkan queues), I had to find a turn arround. The solution was to make buffers `n` times bigger. Then, I can loop over `n` tile batches where I fill the same buffers but starting from different indices. By doing so, I can have a single memory barrier after the compute shader phase. However, because all the tiles don't have the same number of blades (see previous optimization point), I can't have a single call to `drawArrays`. Once again, this would have been a lot easier using the queue calls of the Vulkan's pipeline (this is why I'll try to learn Vulkan for futur projects).
 
-With all these optimizations, we went from 5 to 30 FPS. TODO: real values
+With all these optimizations, we went from 5 to arround 15 FPS on average (using a laptop without a dedicated GPU).
+
+## Step 13 Lighting
+
+When trying to implement a basic Blin-Phong Model in the fragment shader, we've realized that the frame rate was reduced by at least half, making the scene really bad. One idea to correct that is to use G-buffers and multiple pass rendering.
+
+However, when trying to create the different textures at the end of my geometry pass, I've realized that outputing multiple textures was as slow as computing the lighting in the fragment shader. 
+![deferred rendering with one texture](report/deferredWith1Texture.png)
+![deferred rendering with all textures](report/deferredWithAllTextures.png)
+
+To fix this issue, I had 3 ideas:
+- create a single texture twice as tall and twice as wide so I can store all the informations in different parts of the texture (but from what I've understood I can only output to one location from a given fragment)
+- create a texture buffer instead of the 3 textures (a bit unconvenient to manipulate)
+- use bit manipulation to fit the necessary information in a single vec4 (not super scalable)

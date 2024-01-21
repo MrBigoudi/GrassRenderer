@@ -202,7 +202,18 @@ class Grass{
         // buffers vertex shader
         GLuint _VAO;
 
+        // buffers for lighting
+        GLuint _Gbuffer;
+        GLuint _TexturePosition;
+        GLuint _TextureNormal;
+        GLuint _TextureColorSpec;
+        ShadersPointer _LightShader;
+        GLuint _LightVAO;
+        GLuint _QuadVAO = 0;
+
     private:
+        void initBuffersLighting();
+
         void initBuffers();
         void updateRenderingBuffers();
 
@@ -269,7 +280,10 @@ class Grass{
 
     public:
         Grass();
-        void renderBatch(Shaders* shaders, float time, const std::vector<GrassLOD>& lods, const std::vector<int>&  nbBlades);
+        void renderBatch(Shaders* shaders, float time, 
+            const std::array<GrassLOD, _NB_PARALLEL_BUFFERS>& lods, 
+            const std::array<int, _NB_PARALLEL_BUFFERS>&  nbBlades
+        );
         void render(Shaders* shaders, const Camera* camera, const glm::mat4& view, const glm::mat4& proj);
         void update(float dt, const glm::vec3& cameraPosition);
 
@@ -279,4 +293,51 @@ class Grass{
             float y = 1.f;
             return glm::vec3(x,y,z);
         }
+
+    private:
+        void initLightShader(){
+            initBuffersLighting();
+            auto error = glGetError();
+            if (error != GL_NO_ERROR) {
+                fprintf(stderr, "Failed to init light buffers !\n\tOpenGL error: %s\n", gluErrorString(error));
+                ErrorHandler::handle(ErrorCodes::GL_ERROR);
+            }
+            _LightShader = ShadersPointer(
+                new Shaders("shader/grassLightVert.glsl", "shader/grassLightFrag.glsl")
+            );
+            _LightShader->use();
+            _LightShader->setInt("gAlbedoSpec", 0);
+            // _LightShader->setInt("gPosition", 1);
+            // _LightShader->setInt("gNormal", 2);
+        }
+
+        void lightShaderPass();
+
+        void renderQuad(){
+            if (_QuadVAO == 0)
+            {
+                float quadVertices[] = {
+                    // positions        // texture Coords
+                    -1.0f,  1.0f, 0.0f, 0.0f, 1.0f,
+                    -1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
+                    1.0f,  1.0f, 0.0f, 1.0f, 1.0f,
+                    1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
+                };
+                // setup plane VAO
+                glGenVertexArrays(1, &_QuadVAO);
+                GLuint quadVBO;
+                glGenBuffers(1, &quadVBO);
+                glBindVertexArray(_QuadVAO);
+                glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
+                glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices, GL_STATIC_DRAW);
+                glEnableVertexAttribArray(0);
+                glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+                glEnableVertexAttribArray(1);
+                glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+            }
+            glBindVertexArray(_QuadVAO);
+            glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+            glBindVertexArray(0);
+        }
+
 };
