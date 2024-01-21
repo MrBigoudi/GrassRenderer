@@ -1,10 +1,9 @@
 #version 450 core
 
-out vec4 oFragCol;
-
 in vec3 geomFragCol;
 in vec3 geomFragNormal;
 in vec3 geomFragPos;
+// in float geomFragLod;
 
 uniform mat4 view;
 uniform mat4 proj;
@@ -93,12 +92,30 @@ vec3 getSpecular(vec3 oColor){
 }
 	
 
+// G buffer things
+layout (location = 0) out vec4 gAlbedoSpec;
+// layout (location = 1) out vec3 gPosition;
+// layout (location = 2) out vec3 gNormal;
+
+// layout (location = 0) out vec4 gGigaTexture;
+
+uniform int TEX_WIDTH;
+uniform int TEX_HEIGHT;
+
 void main(){
     vec3 color = geomFragCol;
+    // if(geomFragLod == 0.f){
+    //     oFragCol = vec4(color, 1.f);
+    //     return;
+    // }
     // vec3 color = geomFragNormal;
     // vec3 ambient = getAmbient(color);
     // vec3 diffuse = getDiffuse(color);
     // vec3 specular = getSpecular(color);
     // oFragCol = vec4(ambient + diffuse + specular, 1.f);
-    oFragCol = vec4(color, 1.f);
+    // oFragCol = vec4(color, 1.f);
+
+    // gPosition = geomFragPos;
+    // gNormal = geomFragNormal;
+    gAlbedoSpec = vec4(color, 1.f);
 }

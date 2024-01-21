@@ -1,4 +1,5 @@
 #include "grass.hpp"
+#include "application.hpp"
 #include "computeShader.hpp"
 #include "errorHandler.hpp"
 #include "frustum.hpp"
@@ -7,6 +8,7 @@
 #include "utils.hpp"
 #include <GL/glu.h>
 #include <cstdlib>
+#include <array>
 
 void Grass::initBuffers(){
     glCreateVertexArrays(1, &_VAO);
@@ -240,6 +242,8 @@ Grass::Grass(){
     initBuffers();
     updateRenderingBuffers();
 
+    initLightShader();
+
     float totalWidth = _NbTileLength * _TileWidth;
     curPos.x = 0.f;
     curPos.y = -1.f * _TileHeight;
@@ -260,13 +264,16 @@ Grass::Grass(){
     glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 2, &GrassTile::_MaxWorkGroupCountZ);
 }
 
-void Grass::renderBatch(Shaders* shaders, float time, const std::vector<GrassLOD>& lods, const std::vector<int>& nbBlades){
+void Grass::renderBatch(Shaders* shaders, float time, 
+    const std::array<GrassLOD, _NB_PARALLEL_BUFFERS>& lods, 
+    const std::array<int, _NB_PARALLEL_BUFFERS>&  nbBlades
+    ){
     shaders->use();
     glBindVertexArray(_VAO);
     shaders->setFloat("time", time);
     // shaders->setInt("nbBlades0", nbBlades[0]);
     // shaders->setInt("nbBlades1", nbBlades[1]);
-    for(int i=0; i<nbBlades.size(); i++){        
+    for(int i=0; i<_NB_PARALLEL_BUFFERS; i++){        
         int blades = nbBlades[i];
         int startId = i*_MAX_NB_GRASS_BLADES;
         if(blades == 0) continue;
@@ -278,6 +285,9 @@ void Grass::renderBatch(Shaders* shaders, float time, const std::vector<GrassLOD
 }
 
 void Grass::render(Shaders* shaders, const Camera* camera, const glm::mat4& view, const glm::mat4& proj){
+    // Pass 1 - geometry
+    glBindFramebuffer(GL_FRAMEBUFFER, _Gbuffer);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     shaders->setMat4f("proj", proj);
     shaders->setMat4f("view", view);
 
@@ -294,8 +304,8 @@ void Grass::render(Shaders* shaders, const Camera* camera, const glm::mat4& view
     // }
 
     for(int i=0; i<_Tiles.size(); i+=_NB_PARALLEL_BUFFERS){
-        std::vector<int> nbBlades;
-        std::vector<GrassLOD> lods;
+        std::array<int, _NB_PARALLEL_BUFFERS> nbBlades;
+        std::array<GrassLOD, _NB_PARALLEL_BUFFERS> lods;
         bool shouldBeRendered = false;
         // #pragma omp parallel for
         for(int j = 0; j<_NB_PARALLEL_BUFFERS; j++){
@@ -303,12 +313,12 @@ void Grass::render(Shaders* shaders, const Camera* camera, const glm::mat4& view
             if(tile->shouldBeRendered(camera->getPosition(), frustum)){
                 tile->dispatchComputeShader(j, _VAO);
                 // tile->render(shaders, _TotalTime, j, _VAO);
-                nbBlades.push_back(tile->_NbGrassBlades);
-                lods.push_back(tile->_LOD);
+                nbBlades[j] = (tile->_NbGrassBlades);
+                lods[j] = (tile->_LOD);
                 shouldBeRendered = true;
             } else {
-                nbBlades.push_back(0);
-                lods.push_back(tile->_LOD);
+                nbBlades[j] = 0;
+                lods[j] = tile->_LOD;
             }
         }
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
@@ -316,6 +326,10 @@ void Grass::render(Shaders* shaders, const Camera* camera, const glm::mat4& view
             renderBatch(shaders, _TotalTime, lods, nbBlades);
         }
     }
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    // Pass 2 - lighting
+    lightShaderPass();
 }
 
 void Grass::update(float dt, const glm::vec3& cameraPosition){
@@ -335,4 +349,148 @@ void Grass::update(float dt, const glm::vec3& cameraPosition){
             tile->setLOD(GRASS_LOW_LOD, cameraPosition);
         }
     }
+}
+
+void Grass::initBuffersLighting(){
+    glGenFramebuffers(1, &_Gbuffer);
+    glBindFramebuffer(GL_FRAMEBUFFER, _Gbuffer);
+    auto error = glGetError();
+
+    // color + specular color buffer
+    glGenTextures(1, &_TextureColorSpec);
+    glBindTexture(GL_TEXTURE_2D, _TextureColorSpec);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, Application::_Width, Application::_Height, 0, GL_RGBA, GL_FLOAT, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, _TextureColorSpec, 0);
+    error = glGetError();
+    if (error != GL_NO_ERROR) {
+        fprintf(stderr, "Failed to init color texture !\n\tOpenGL error: %s\n", gluErrorString(error));
+        ErrorHandler::handle(ErrorCodes::GL_ERROR);
+    }
+
+    // position color buffer
+    glGenTextures(1, &_TexturePosition);
+    glBindTexture(GL_TEXTURE_2D, _TexturePosition);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, Application::_Width, Application::_Height, 0, GL_RGBA, GL_FLOAT, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, _TexturePosition, 0);
+    error = glGetError();
+    if (error != GL_NO_ERROR) {
+        fprintf(stderr, "Failed to init position texture !\n\tOpenGL error: %s\n", gluErrorString(error));
+        ErrorHandler::handle(ErrorCodes::GL_ERROR);
+    }
+
+    // normal color buffer
+    glGenTextures(1, &_TextureNormal);
+    glBindTexture(GL_TEXTURE_2D, _TextureNormal);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, Application::_Width, Application::_Height, 0, GL_RGBA, GL_FLOAT, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, _TextureNormal, 0);
+    error = glGetError();
+    if (error != GL_NO_ERROR) {
+        fprintf(stderr, "Failed to init normal texture !\n\tOpenGL error: %s\n", gluErrorString(error));
+        ErrorHandler::handle(ErrorCodes::GL_ERROR);
+    }
+
+
+    unsigned int attachments[3] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2 };
+    glDrawBuffers(3, attachments);
+    // create and attach depth buffer (renderbuffer)
+    GLuint rboDepth;
+    glGenRenderbuffers(1, &rboDepth);
+    glBindRenderbuffer(GL_RENDERBUFFER, rboDepth);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, Application::_Width, Application::_Height);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rboDepth);
+    // finally check if framebuffer is complete
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE){
+        fprintf(stderr, "Framebuffer not complete!\n");
+        ErrorHandler::handle(ErrorCodes::GL_ERROR);
+    }
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    error = glGetError();
+    if (error != GL_NO_ERROR) {
+        fprintf(stderr, "Failed to init texture buffers !\n\tOpenGL error: %s\n", gluErrorString(error));
+        ErrorHandler::handle(ErrorCodes::GL_ERROR);
+    }
+
+    // draw quad
+    float vertices[] = {
+        -1.f, 1.f, 0.f,
+        -1.f, -1.f, 0.f,
+        1.f, 1.f, 0.f,
+        1.f, -1.f, 0.f
+    };
+    float uvs[] = {
+        0.f, 1.f,
+        0.f, 0.f,
+        1.f, 1.f,
+        1.f, 0.f
+    };
+    int indices[] = {
+        0,1,2,
+        1,3, 2
+    };
+    GLuint vboVert, vboUvs, ibo;
+    glCreateBuffers(1, &vboVert);
+    glCreateBuffers(1, &vboUvs);
+    glNamedBufferStorage(vboVert, sizeof(float)*12, vertices, GL_DYNAMIC_STORAGE_BIT);
+    glNamedBufferStorage(vboUvs, sizeof(float)*8, vertices, GL_DYNAMIC_STORAGE_BIT);
+
+    glCreateBuffers(1, &ibo);
+    glNamedBufferStorage(ibo, sizeof(int)*6, indices, GL_DYNAMIC_STORAGE_BIT);
+
+    glCreateVertexArrays(1, &_LightVAO);
+
+    glVertexArrayVertexBuffer(_LightVAO, 0, vboVert, 0, 3*sizeof(float));
+    glVertexArrayVertexBuffer(_LightVAO, 1, vboUvs, 0, 2*sizeof(float));
+    glVertexArrayElementBuffer(_LightVAO, ibo);
+
+    glEnableVertexArrayAttrib(_LightVAO, 0);
+    glEnableVertexArrayAttrib(_LightVAO, 1);
+
+    glVertexArrayAttribFormat(_LightVAO, 0, 3, GL_FLOAT, GL_FALSE, 0);
+    glVertexArrayAttribFormat(_LightVAO, 1, 2, GL_FLOAT, GL_FALSE, 0);
+
+    glVertexArrayAttribBinding(_LightVAO, 0, 0);
+    glVertexArrayAttribBinding(_LightVAO, 1, 0);
+
+}
+
+void Grass::lightShaderPass(){
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    _LightShader->use();
+    auto error = glGetError();
+    if (error != GL_NO_ERROR) {
+        fprintf(stderr, "Failed to use light shader !\n\tOpenGL error: %s\n", gluErrorString(error));
+        ErrorHandler::handle(ErrorCodes::GL_ERROR);
+    }
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, _TextureColorSpec);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, _TexturePosition);
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_2D, _TextureNormal);
+    error = glGetError();
+    if (error != GL_NO_ERROR) {
+        fprintf(stderr, "Failed to bind textures !\n\tOpenGL error: %s\n", gluErrorString(error));
+        ErrorHandler::handle(ErrorCodes::GL_ERROR);
+    }
+
+    // draw quad
+    renderQuad();
+    error = glGetError();
+    if (error != GL_NO_ERROR) {
+        fprintf(stderr, "Failed to draw quad !\n\tOpenGL error: %s\n", gluErrorString(error));
+        ErrorHandler::handle(ErrorCodes::GL_ERROR);
+    }
+
+    // copy depth buffers
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, _Gbuffer);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+    glBlitFramebuffer(0, 0, Application::_Width, Application::_Height, 0, 0, Application::_Width, Application::_Height, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
