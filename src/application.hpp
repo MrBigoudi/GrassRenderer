@@ -18,6 +18,8 @@
 #include <GL/gl.h>
 #include <GLFW/glfw3.h>
 #include <thread>
+#include <sstream>
+#include <iomanip>
 
 using PointLights = std::vector<LightPointer>;
 
@@ -67,6 +69,11 @@ class Application{
         bool _isPressedH = false;
         bool _isPressedJ = false;
         MouseMode _MouseMode = MOUSE_MODE_CAMERA;
+
+        bool _isPressedV = false;
+        bool _SaveFrame = false;
+        int _SaveFrameCount = 0;
+        int _SaveVideoCount = 0;
 
     private:
         void update();
@@ -201,6 +208,26 @@ class Application{
 
             ImGui::Render();
             ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+        }
+
+        void saveFrame(){
+            if(_SaveFrame) {
+                std::stringstream fpath;
+                fpath << "report/videos/" << _SaveVideoCount << "_s" 
+                    << std::setw(4) << std::setfill('0') 
+                    << _SaveFrameCount++ << ".tga";
+
+                const short int w = _Width;
+                const short int h = _Height;
+                std::vector<int> buf(w*h*3, 0);
+                glReadPixels(0, 0, w, h, GL_BGR, GL_UNSIGNED_BYTE, &(buf[0]));
+
+                FILE *out = fopen(fpath.str().c_str(), "wb");
+                short TGAhead[] = {0, 2, 0, 0, 0, 0, w, h, 24};
+                fwrite(&TGAhead, sizeof(TGAhead), 1, out);
+                fwrite(&(buf[0]), 3*w*h, 1, out);
+                fclose(out);
+            }
         }
 
     public:

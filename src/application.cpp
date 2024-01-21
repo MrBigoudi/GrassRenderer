@@ -139,6 +139,18 @@ void Application::handleInput(){
         }        
     }
 
+    if (glfwGetKey(_Window, GLFW_KEY_V) == GLFW_PRESS) {
+        if(!_isPressedV){
+            _SaveFrame = !_SaveFrame;
+            if(_SaveFrame) _SaveVideoCount++;
+        }
+    }
+    if (glfwGetKey(_Window, GLFW_KEY_V) == GLFW_RELEASE) {
+        if(_isPressedV){
+            _isPressedV = false;
+        }        
+    }
+
 
     handleWireFrameInput();
     handleCameraInput();
@@ -184,6 +196,7 @@ void Application::run(){
         glfwPollEvents();
         glfwSwapBuffers(_Window);
 
+        // saveFrame();
     }
 }
 

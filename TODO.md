@@ -6,6 +6,8 @@
 
 ## Major features
 
+- 2 pass rendering
+
 ## Minor features
 
 - add comments
